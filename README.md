@@ -1,6 +1,6 @@
 # jenkins-docker
 
-Build a Docker image using Jenkins pipeline and push it into Docker registry. The Jenkins pulled from Jenkins official image latest version.
+Build a Docker image using Jenkins pipeline and push it into Docker registry. This Dockerfile is built from jenkins official image, install Docker and give access to user ```jenkins``` build dockers.
 
 ## Running Jenkins with Docker from host
 
@@ -10,7 +10,7 @@ Start your jenkins-docker container by running this command:
 docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock eslabsid/jenkins-docker
 ```
 
-You also can configuring a volume for Jenkins home. Use a directory for which you have permission.
+You also can configure a volume for Jenkins home. Use a directory for which you have permission.
 
 ```
 JENKINS_HOME="${HOME}/jenkins_home"
@@ -21,6 +21,11 @@ Change ownership required for Linux, ignore this line for Mac or Windows.
 
 ```
 chown 1000:1000 ${JENKINS_HOME}
+```
+
+Initialize jenkins-docker container as below:
+
+```
 docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v ${JENKINS_HOME}:/var/jenkins_home eslabsid/jenkins-docker
 ```
 
