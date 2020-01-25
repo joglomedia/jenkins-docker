@@ -2,7 +2,7 @@
 
 Build a Docker image using Jenkins pipeline and push it into Docker registry. The Jenkins pulled from Jenkins official image latest version.
 
-## Running jenkins with docker from host
+## Running Jenkins with Docker from host
 
 ```
 docker run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock eslabsid/jenkins-docker
