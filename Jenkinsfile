@@ -11,8 +11,8 @@ pipeline {
         REGISTRY = "https://registry.hub.docker.com/"
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
-    def image
     stages {
+        def image
         stage('Verify Repo') {
             steps {
                 script {
