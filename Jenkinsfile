@@ -27,7 +27,11 @@ pipeline {
             steps {
                 script {
                     image = docker.build("${IMAGE}")
-                    println "Newly generated image, " + image.id
+                    if ( image.id != "" ) {
+                        println "Newly built Docker image: " + image.id
+                    } else {
+                        println "Failed building Docker image"
+                    }
                 }
             }
         }
@@ -36,12 +40,11 @@ pipeline {
                 script {
                     def container = image.run('-p 9090')
                     def conport = container.port(9090)
-                    println image.id + " container is running at host port, " + conport
+                    println image.id + " container is running at host port: " + conport
                     def resp = sh(returnStdout: true,
                                     script: """
-                                            set +x
-                                            curl -w "%{http_code}" -o /dev/null -s \
-                                            http://localhost\":${conport}\"
+                                            set +x;
+                                            curl -w "%{http_code}" -o /dev/null -s http://\":${conport}\"
                                             """
                         ).trim()
                     if ( resp == "200" ) {
