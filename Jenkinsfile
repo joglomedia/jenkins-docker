@@ -37,11 +37,11 @@ pipeline {
         stage('Run Builder Tests') {
             steps {
                 script {
-                    def builder_container = image.run('-d -p :9090 --name jenkins_docker', '--rm jenkins_docker')
+                    def builder_container = image.run("-d -p :9090 --name jenkins_docker")
                     def conport = builder_container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
-                        script: "set +x && curl -w \"%{http_code}\" -o /dev/null -s http://${conport}",
+                        script: "curl -w \"%{http_code}\" -o /dev/null -s http://${conport}",
                         returnStdout: true
                     ).trim()
                     if ( "${env.STATUS_CODE}" == "200" ) {
