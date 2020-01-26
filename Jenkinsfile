@@ -37,8 +37,8 @@ pipeline {
         stage('Run Builder Tests') {
             steps {
                 script {
-                    def builder_container = image.run("-d -p :9090 --name jenkins_docker")
-                    def conport = builder_container.port(9090)
+                    def container = image.run("-d -p :9090 --name jenkins_docker")
+                    def conport = container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
                         script: "curl -w \"%{http_code}\" -o /dev/null -s http://${conport}",
@@ -66,11 +66,11 @@ pipeline {
     }
     post {
         always {
-            script {
+            /*script {
                 sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
                 sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
                 sh "docker rmi ${env.IMAGE}"
-            }
+            }*/
             cleanWs()
         }
     }
