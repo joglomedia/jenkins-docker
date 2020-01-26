@@ -38,8 +38,8 @@ pipeline {
         stage('Testing Docker Image') {
             steps {
                 script {
-                    def container = image.run('-p 9090:9090')
-                    def conport = container.port('9090')
+                    def container = image.run('-p :9090')
+                    def conport = container.port(9090)
                     println image.id + " container is running at host port: " + conport
                     env.STATUS_CODE = sh(returnStdout: true,
                                     script: '''
