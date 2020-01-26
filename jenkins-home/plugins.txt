@@ -1,5 +1,4 @@
 blueocean:1.21.0
-blueocean-autofavorite:1.21.0
 blueocean-bitbucket-pipeline:1.21.0
 blueocean-commons:1.21.0
 blueocean-config:1.21.0
@@ -23,6 +22,7 @@ dockerhub-notification:2.4.0
 email-ext:2.68
 git:4.1.1
 git-client:3.1.1
+git-server:1.9
 github:1.29.5
 github-api:1.95
 jdk-tool:1.4
