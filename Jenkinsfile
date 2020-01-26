@@ -6,7 +6,6 @@
  */
 pipeline {
     agent any
-    //agent { dockerfile true }
     environment {
         IMAGE = "eslabsid/jenkins-docker"
         REGISTRY = "https://registry.hub.docker.com/"
@@ -23,24 +22,25 @@ pipeline {
                 }
             }
         }
-        stage('Build Docker Image') {
+        stage('Spin Up Builder') {
             steps {
                 script {
-                    image = docker.build("${IMAGE}")
-                    if ( image.id != "" ) {
-                        println "Newly built Docker image: " + image.id
+                    def builder = docker.build("${IMAGE}")
+                    if ( builder.id != "" ) {
+                        println "Newly built Docker image: " + builder.id
+                        def builder_container = builder.run('-d -p :9090 --name jenkins_docker')
                     } else {
                         println "Failed building Docker image"
+                        currentBuild.result = "FAILURE"
                     }
                 }
             }
         }
-        stage('Testing Docker Image') {
+        stage('Run Builder Tests') {
             steps {
                 script {
-                    def container = image.run('-p :9090')
-                    def conport = container.port(9090)
-                    println image.id + " container is running at host port: " + conport
+                    def conport = builder_container.port(9090)
+                    println builder.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(returnStdout: true,
                                     script: """
                                             set +x
@@ -52,10 +52,10 @@ pipeline {
                         docker.withRegistry("${env.REGISTRY}", "${env.REGISTRY_CREDENTIAL}") {
                             if ( "${env.BRANCH_NAME}" == "master" ) {
                                 println "Push image ${env.IMAGE}:master to registry ${env.REGISTRY}"
-                                image.push("latest")
+                                builder.push("latest")
                             } else {
                                 println "Push image ${env.IMAGE}:${env.GIT_HASH} to registry ${env.REGISTRY}"
-                                image.push("${env.GIT_HASH}")
+                                builder.push("${env.GIT_HASH}")
                             }
                         }
                         currentBuild.result = "SUCCESS"
@@ -69,6 +69,11 @@ pipeline {
     }
     post {
         always {
+            script { 
+                builder_container.stop()
+                //sh 'docker ps -q -f "name=jenkins_docker" | xargs --no-run-if-empty docker container stop'
+                //sh 'docker container ls -a -q -f "name=jenkins_docker" | xargs -r docker container rm'
+            }
             cleanWs()
         }
     }
