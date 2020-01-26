@@ -41,7 +41,7 @@ pipeline {
                     def conport = builder_container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
-                        script: curl -w "%{http_code}" -o /dev/null -s http://${conport},
+                        script: "curl -w '%{http_code}' -o /dev/null -s http://${conport}",
                         returnStdout: true
                     ).trim()
                     if ( "${env.STATUS_CODE}" == "200" ) {
