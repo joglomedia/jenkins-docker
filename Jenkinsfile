@@ -27,21 +27,21 @@ pipeline {
                 script {
                     def image = docker.build("${IMAGE}")
                     if ( image.id != "" ) {
-                        println "Newly built Docker image: " + image.id
+                        println "Newly built Docker image : " + image.id
                     } else {
                         println "Failed building Docker image"
                     }
                 }
             }
         }
-        stage('Run Builder Tests') {
+        stage('Test Builder') {
             steps {
                 script {
                     def builder_container = image.run("-d -p 9090:8080 --name=jenkins_docker")
-                    def conport = builder_container.port("9090")
+                    def conport = builder_container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
-                        script: "curl -w \"%{http_code}\" -o /dev/null -s http://${conport}",
+                        script: curl -w "%{http_code}" -o /dev/null -s http://${conport},
                         returnStdout: true
                     ).trim()
                     if ( "${env.STATUS_CODE}" == "200" ) {
@@ -66,11 +66,11 @@ pipeline {
     }
     post {
         always {
-            /*script {
+            script {
                 sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
                 sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
                 sh "docker rmi ${env.IMAGE}"
-            }*/
+            }
             cleanWs()
         }
     }
