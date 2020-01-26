@@ -37,7 +37,7 @@ pipeline {
         stage('Run Builder Tests') {
             steps {
                 script {
-                    def builder_container = builder.run('-d -p :9090 --name jenkins_docker', '--rm jenkins_docker')
+                    builder_container = builder.run('-d -p :9090 --name jenkins_docker', '--rm jenkins_docker')
                     def conport = builder_container.port(9090)
                     println builder.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
@@ -67,9 +67,9 @@ pipeline {
     post {
         always {
             script { 
-                builder_container.stop()
-                //sh 'docker ps -q -f "name=jenkins_docker" | xargs --no-run-if-empty docker container stop'
-                //sh 'docker container ls -a -q -f "name=jenkins_docker" | xargs -r docker container rm'
+                //builder_container.stop()
+                sh 'docker ps -q -f "name=jenkins_docker" | xargs --no-run-if-empty docker container stop'
+                sh 'docker container ls -a -q -f "name=jenkins_docker" | xargs -r docker container rm'
             }
             cleanWs()
         }
