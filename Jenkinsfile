@@ -42,10 +42,10 @@ pipeline {
                     def conport = container.port(9090)
                     println image.id + " container is running at host port: " + conport
                     env.STATUS_CODE = sh(returnStdout: true,
-                                    script: '''
+                                    script: """
                                             set +x
                                             curl -w "%{http_code}" -o /dev/null -s http://${conport}
-                                            '''
+                                            """
                         ).trim()
                     if ( "${env.STATUS_CODE}" == "200" ) {
                         println "Jenkins-docker is alive and kicking!"
