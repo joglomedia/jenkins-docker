@@ -28,10 +28,8 @@ pipeline {
                     def builder = docker.build("${IMAGE}")
                     if ( builder.id != "" ) {
                         println "Newly built Docker image: " + builder.id
-                        def builder_container = builder.run('-d -p :9090 --name jenkins_docker')
                     } else {
                         println "Failed building Docker image"
-                        currentBuild.result = "FAILURE"
                     }
                 }
             }
@@ -39,14 +37,13 @@ pipeline {
         stage('Run Builder Tests') {
             steps {
                 script {
+                    def builder_container = builder.run('-d -p :9090 --name jenkins_docker', '--rm jenkins_docker')
                     def conport = builder_container.port(9090)
                     println builder.id + " container is running at host:port " + conport
-                    env.STATUS_CODE = sh(returnStdout: true,
-                                    script: """
-                                            set +x
-                                            curl -w "%{http_code}" -o /dev/null -s http://${conport}
-                                            """
-                        ).trim()
+                    env.STATUS_CODE = sh(
+                        script: "set +x && curl -w \"%{http_code}\" -o /dev/null -s http://${conport}",
+                        returnStdout: true
+                    ).trim()
                     if ( "${env.STATUS_CODE}" == "200" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry("${env.REGISTRY}", "${env.REGISTRY_CREDENTIAL}") {
