@@ -25,7 +25,7 @@ pipeline {
         stage('Spin Up Image') {
             steps {
                 script {
-                    image = docker.build("${IMAGE}")
+                    def image = docker.build("${IMAGE}")
                     if ( image.id != "" ) {
                         println "Newly built Docker image : " + image.id
                     } else {
@@ -38,7 +38,7 @@ pipeline {
             agent any
             steps {
                 script {
-                    builder_container = image.run("-d -p 9090:8080 --name=jenkins_docker")
+                    builder_container = image.run("-p 9090:8080 --name=jenkins_docker")
                     conport = builder_container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
