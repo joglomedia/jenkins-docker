@@ -38,12 +38,12 @@ pipeline {
         stage('Testing Docker Image') {
             steps {
                 script {
-                    def container = image.run('-p 9090')
-                    def conport = container.port(9090)
+                    def container = image.run('-p 9090:9090')
+                    def conport = container.port('9090')
                     println image.id + " container is running at host port: " + conport
                     def resp = sh(returnStdout: true,
                                     script: """
-                                            set +x;
+                                            set +x
                                             curl -w "%{http_code}" -o /dev/null -s http://${conport}
                                             """
                         ).trim()
