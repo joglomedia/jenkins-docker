@@ -1,20 +1,19 @@
 /*
- * Pipeline
+ * Jenkins Pipeline
  * Ref:
  *  https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry
  *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
-
 pipeline {
     agent any
     //agent { dockerfile true }
     environment {
         IMAGE = "eslabsid/jenkins-docker"
         REGISTRY = "https://registry.hub.docker.com/"
-        REGISTRY_CREDENTIAL = 'dockerhub'
+        REGISTRY_CREDENTIAL = 'dockerhub-cred'
     }
     stages {
-        stage('prep') {
+        stage('Verify Git Repo') {
             steps {
                 script {
                     env.GIT_HASH = sh(
@@ -24,7 +23,7 @@ pipeline {
                 }
             }
         }
-        stage('build') {
+        stage('Build Docker Image') {
             steps {
                 script {
                     image = docker.build("${IMAGE}")
@@ -32,7 +31,7 @@ pipeline {
                 }
             }
         }
-        stage('test') {
+        stage('Testing Docker Image') {
             steps {
                 script {
                     def container = image.run('-p 9090')
