@@ -41,18 +41,20 @@ pipeline {
                     def container = image.run('-p 9090:9090')
                     def conport = container.port('9090')
                     println image.id + " container is running at host port: " + conport
-                    def resp = sh(returnStdout: true,
-                                    script: """
+                    env.STATUS_CODE = sh(returnStdout: true,
+                                    script: '''
                                             set +x
                                             curl -w "%{http_code}" -o /dev/null -s http://${conport}
-                                            """
+                                            '''
                         ).trim()
-                    if ( resp == "200" ) {
+                    if ( "${env.STATUS_CODE}" == "200" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry("${env.REGISTRY}", "${env.REGISTRY_CREDENTIAL}") {
                             if ( "${env.BRANCH_NAME}" == "master" ) {
+                                println "Push image ${env.IMAGE}:master to registry ${env.REGISTRY}"
                                 image.push("latest")
                             } else {
+                                println "Push image ${env.IMAGE}:${env.GIT_HASH} to registry ${env.REGISTRY}"
                                 image.push("${env.GIT_HASH}")
                             }
                         }
