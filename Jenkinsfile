@@ -37,8 +37,8 @@ pipeline {
         stage('Run Builder Tests') {
             steps {
                 script {
-                    def container = image.run("-d -p :9090 --name jenkins_docker")
-                    def conport = container.port(9090)
+                    def builder_container = image.run("-d -p 9090:8080 --name=jenkins_docker")
+                    def conport = builder_container.port("9090")
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
                         script: "curl -w \"%{http_code}\" -o /dev/null -s http://${conport}",
