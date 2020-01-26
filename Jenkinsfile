@@ -22,7 +22,7 @@ pipeline {
                 }
             }
         }
-        stage('Spin Up Image') {
+        stage('Build Image') {
             steps {
                 script {
                     def image = docker.build("${IMAGE}")
@@ -35,16 +35,15 @@ pipeline {
             }
         }
         stage('Test Image') {
-            agent any
             steps {
                 script {
-                    builder_container = image.run("-p 9090:8080 --name=jenkins_docker")
-                    conport = builder_container.port(9090)
+                    def container = image.run("-p 9090:8080 --name=jenkins_docker")
+                    def conport = container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
                         script: '''
                                 set +x
-                                curl -w "%{http_code}" -o /dev/null -s http://${conport}
+                                curl -w "%{http_code}" -o /dev/null -s http://\"${contport}\"
                                 ''',
                         returnStdout: true
                     ).trim()
