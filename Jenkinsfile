@@ -36,13 +36,17 @@ pipeline {
             }
         }
         stage('Test Image') {
+            agent any
             steps {
                 script {
                     builder_container = image.run("-d -p 9090:8080 --name=jenkins_docker")
                     conport = builder_container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
-                        script: "curl -w '%{http_code}' -o /dev/null -s http://${conport}",
+                        script: '''
+                                set +x
+                                curl -w "%{http_code}" -o /dev/null -s http://${conport}
+                                ''',
                         returnStdout: true
                     ).trim()
                 }
