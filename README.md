@@ -36,7 +36,7 @@ For running container in the background add a ```-d``` or ```--detach``` paramet
 After initializing the Jenkins container, complete the Jenkins startup wizard and install additional plugins (Locale & Blueocean). Your Jenkins web administration should be accessible from here:
 
 ```
-http://YOUR-IP-ADDRESS:8080
+http://YOUR-IP-ADDRESS:8080/
 ```
 
 If you're asked for administrator password, you can get the password from inside container by executing the following command:
@@ -47,7 +47,7 @@ docker exec -it jenkins-docker cat /var/jenkins_home/secrets/initialAdminPasswor
 
 ## Install additional plugins
 
-
+All additional plugins listed in ``jenkins-home/plugins.txt`` file.
 
 ## Inspirations
 [Jenkins and Docker](https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry)
