@@ -12,7 +12,6 @@ pipeline {
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
     stages {
-        def image
         stage('Verify Repo') {
             steps {
                 script {
