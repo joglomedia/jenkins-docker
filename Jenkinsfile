@@ -9,10 +9,11 @@ pipeline {
     environment {
         IMAGE = "eslabsid/jenkins-docker"
         REGISTRY = "https://registry.hub.docker.com/"
-        REGISTRY_CREDENTIAL = 'dockerhub-cred'
+        REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
+    def image
     stages {
-        stage('Verify Git Repo') {
+        stage('Verify Repo') {
             steps {
                 script {
                     env.GIT_HASH = sh(
@@ -22,10 +23,10 @@ pipeline {
                 }
             }
         }
-        stage('Spin Up Builder') {
+        stage('Spin Up Image') {
             steps {
                 script {
-                    def image = docker.build("${IMAGE}")
+                    image = docker.build("${IMAGE}")
                     if ( image.id != "" ) {
                         println "Newly built Docker image : " + image.id
                     } else {
@@ -34,16 +35,25 @@ pipeline {
                 }
             }
         }
-        stage('Test Builder') {
+        stage('Test Image') {
             steps {
                 script {
-                    def builder_container = image.run("-d -p 9090:8080 --name=jenkins_docker")
-                    def conport = builder_container.port(9090)
+                    builder_container = image.run("-d -p 9090:8080 --name=jenkins_docker")
+                    conport = builder_container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
                         script: "curl -w '%{http_code}' -o /dev/null -s http://${conport}",
                         returnStdout: true
                     ).trim()
+                }
+            }
+        }
+        stage('Push Image') {
+            /* Finally, we'll push the image
+             *
+             */
+            steps {
+                script {
                     if ( "${env.STATUS_CODE}" == "200" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry("${env.REGISTRY}", "${env.REGISTRY_CREDENTIAL}") {
@@ -61,6 +71,7 @@ pipeline {
                         currentBuild.result = "FAILURE"
                     }
                 }
+
             }
         }
     }
