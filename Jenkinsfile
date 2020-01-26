@@ -25,9 +25,9 @@ pipeline {
         stage('Spin Up Builder') {
             steps {
                 script {
-                    def builder = docker.build("${IMAGE}")
-                    if ( builder.id != "" ) {
-                        println "Newly built Docker image: " + builder.id
+                    def image = docker.build("${IMAGE}")
+                    if ( image.id != "" ) {
+                        println "Newly built Docker image: " + image.id
                     } else {
                         println "Failed building Docker image"
                     }
@@ -37,9 +37,9 @@ pipeline {
         stage('Run Builder Tests') {
             steps {
                 script {
-                    builder_container = builder.run('-d -p :9090 --name jenkins_docker', '--rm jenkins_docker')
+                    def builder_container = image.run('-d -p :9090 --name jenkins_docker', '--rm jenkins_docker')
                     def conport = builder_container.port(9090)
-                    println builder.id + " container is running at host:port " + conport
+                    println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
                         script: "set +x && curl -w \"%{http_code}\" -o /dev/null -s http://${conport}",
                         returnStdout: true
@@ -49,10 +49,10 @@ pipeline {
                         docker.withRegistry("${env.REGISTRY}", "${env.REGISTRY_CREDENTIAL}") {
                             if ( "${env.BRANCH_NAME}" == "master" ) {
                                 println "Push image ${env.IMAGE}:master to registry ${env.REGISTRY}"
-                                builder.push("latest")
+                                image.push("latest")
                             } else {
                                 println "Push image ${env.IMAGE}:${env.GIT_HASH} to registry ${env.REGISTRY}"
-                                builder.push("${env.GIT_HASH}")
+                                image.push("${env.GIT_HASH}")
                             }
                         }
                         currentBuild.result = "SUCCESS"
@@ -66,10 +66,10 @@ pipeline {
     }
     post {
         always {
-            script { 
-                //builder_container.stop()
-                sh 'docker ps -q -f "name=jenkins_docker" | xargs --no-run-if-empty docker container stop'
-                sh 'docker container ls -a -q -f "name=jenkins_docker" | xargs -r docker container rm'
+            script {
+                sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
+                sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
+                sh "docker rmi ${env.IMAGE}"
             }
             cleanWs()
         }
