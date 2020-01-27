@@ -121,7 +121,7 @@ def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
 
-    sh "cp ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
+    sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
     sh "sed -i \"s/\\${registryOrg}/${env.REGISTRY_ORG}/g\" ${emailTemplatePath}"
     sh "sed -i \"s/\\${registryRepo}/${env.REGISTRY_REPO}/g\" ${emailTemplatePath}"
     sh "sed -i \"s/\\${gitUrl}/${env.GIT_URL}/g\" ${emailTemplatePath}"
