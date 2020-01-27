@@ -119,8 +119,8 @@ def cleanupBuildImage() {
 }
 
 def sendEmailNotification() {
-    emailext subject: "${DEFAULT_SUBJECT}",
+    emailext subject: "${env.DEFAULT_SUBJECT}",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
-        body: "${DEFAULT_CONTENT}"
+        body: "${env.DEFAULT_CONTENT}"
 }
 
