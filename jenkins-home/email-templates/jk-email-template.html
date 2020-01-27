@@ -27,7 +27,7 @@
                   <tbody><tr style="background:rgba(50,210,130,0.1)">
                     <td id="status-icon-section" align="center" valign="top" style="border-bottom:1px solid #32d282;padding:15px 15px">
                     <div style="float:left">
-                      <div style="display:inline"><img alt="build has passed" style="display:inline;vertical-align:sub;width:17px;height:17px;padding-right:8px" src="https://s3.amazonaws.com/travis-email-assets/status-{imgStatusSrc}.png" class="CToWUd"></div><div style="display:inline"><a id="status-section-message" class="{cssStatusClass}" style="color:{cssBgColor};font-size:16px;font-weight:600" href="http://94.237.72.184:8080/blue/organizations/jenkins/{jobBaseName}/detail/{gitBranch}/{buildNumber}/pipeline?utm_medium=notification&amp;utm_source=email" target="_blank">Build #{buildNumber} {buildStatus}</a></div>
+                      <div style="display:inline"><img alt="build has passed" style="display:inline;vertical-align:sub;width:17px;height:17px;padding-right:8px" src="https://s3.amazonaws.com/travis-email-assets/status-{buildStatus}.png" class="CToWUd"></div><div style="display:inline"><a id="status-section-message" class="{cssStatusClass}" style="color:{cssBgColor};font-size:16px;font-weight:600" href="{buildUrl}?utm_medium=notification&amp;utm_source=email" target="_blank">Build #{buildNumber} {buildStatus}</a></div>
                     </div>
                       <div style="display:inline;float:left"><img id="arrow" alt="arrow to build time" style="width:7px;height:auto;vertical-align:text-bottom;padding:0px 8px" src="https://s3.amazonaws.com/travis-email-assets/success-arrow.png" class="CToWUd"></div>
                     <div style="float:right">
@@ -39,7 +39,7 @@
                     <td id="user-avatar-changeset-section" align="center" valign="top" style="padding-bottom:32px;padding:20px 15px 35px 15px">
                       <div id="user-avatar-changeset-left" style="float:left;float:left">
                         <p style="margin:0px;display:inline;font-size:14px;font-weight:700;color:#333333">
-                          <img alt="{gitCommitterName} avatar" style="width:22px;height:auto;border-radius:10px;vertical-align:middle;margin-right:8px" src="https://secure.gravatar.com/avatar/5338caa3b417ca2d7b889cb4abd753d3" class="CToWUd">{gitCommitterName}
+                          <img alt="{gitCommitterName} avatar" style="width:22px;height:auto;border-radius:10px;vertical-align:middle;margin-right:8px" src="https://secure.gravatar.com/avatar/{gitCommitterAvatar}" class="CToWUd">{gitCommitterName}
                         </p>
                       </div>
                       <div id="user-avatar-changeset-right" style="float:right;float:right">
@@ -105,7 +105,7 @@
             <tr>
               <td id="email-footer-section" align="center" valign="top" style="font-size:10px;line-height:200%;text-align:center;color:#9ea3a8;padding-top:0px">
                 <span>
-                    <a href="#" style="color:#9ea3a8" target="_blank">Unsubscribe</a> from build emails from the {env.JOB_NAME} repository.
+                    <a href="#" style="color:#9ea3a8" target="_blank">Unsubscribe</a> from build emails from the {jobName}  repository.
                 </span>
               </td>
             </tr>

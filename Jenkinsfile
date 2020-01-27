@@ -4,7 +4,6 @@
  *  https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry
  *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
-
 pipeline {
     agent any
     environment {
@@ -55,16 +54,10 @@ pipeline {
                 script {
                     if ( env.STATUS_CODE != "000" || env.JENKINS_PASS != "" ) {
                         println "Jenkins-docker is alive and kicking!"
-                        docker.withRegistry(env.REGISTRY_URL, env.REGISTRY_CREDENTIAL) {
-                            println "Push image ${env.IMAGE_NAME} to registry ${env.REGISTRY_URL}"
-                            buildImage.push()
-                            //if ( env.BRANCH_NAME == "master" ) {
-                            //    println "Push image ${env.IMAGE_NAME}:master to registry ${env.REGISTRY_URL}"
-                            //    buildImage.push("latest")
-                            //} else {
-                            //    println "Push image ${env.IMAGE_NAME}:${env.GIT_COMMIT_HASH} to registry ${env.REGISTRY_URL}"
-                            //    buildImage.push(env.GIT_COMMIT_HASH)
-                            //}
+                        withDockerRegistry(credentialsId: "${env.REGISTRY_CREDENTIAL}", url: "") {
+                            println "Push image ${env.IMAGE_NAME} to DockerHub registry"
+                            //buildImage.push()
+                            sh "docker push ${env.IMAGE_NAME}"
                         }
                         currentBuild.result = "SUCCESS"
                     } else {
@@ -132,9 +125,10 @@ def cleanupBuildImage() {
 def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
-    def rgitUrl = ${env.GIT_URL}
+    def rgitUrl = "${env.GIT_URL}"
     def gitUrl = rgitUrl.replace(".get", "")
-    def gitCommitterAvatar = generateMD5(env.GIT_COMMITTER_EMAIL)
+    def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
+    def gitCommitterAvatar = gitCommiterEmail.md5()
     def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
     def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
     
@@ -148,6 +142,7 @@ def sendEmailNotification() {
     sh "sed -i 's|{gitCommitterName}|${env.GIT_COMMITTER_NAME}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{gitCommitterAvatar}|${gitCommitterAvatar}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{jobBaseName}|${env.JOB_BASE_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{jobName}|${env.JOB_NAME}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{buildUrl}|${env.BUILD_URL}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{buildDuration}|${currentBuild.durationString}|g' ${emailTemplateDir}/jk-email.html"
@@ -160,12 +155,5 @@ def sendEmailNotification() {
         //body: '${SCRIPT, template="groovy-html.template"}'
         body: '${FILE, path="jk-email.html"}'
 
-    //sh "rm -f ${emailTemplateDir}/jk-email.html"
-}
-
-
-import java.security.MessageDigest
-
-def generateMD5(String s){
-    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
