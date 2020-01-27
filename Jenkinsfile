@@ -50,7 +50,7 @@ pipeline {
         stage('Register Image') {
             steps {
                 script {
-                    if ( env.STATUS_CODE == "200" || env.STATUS_CODE == "403" || env.JENKINS_PASS != "" ) {
+                    if ( env.STATUS_CODE != "000" || env.JENKINS_PASS != "" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry(env.REGISTRY_URL, env.REGISTRY_CREDENTIAL) {
                             println "Push image ${env.IMAGE_NAME} to registry ${env.REGISTRY_URL}"
@@ -127,14 +127,14 @@ def cleanupBuildImage() {
 def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
-    def gitUrl = (env.GIT_URL.replace(".get", ""))
+    def gitUrl = ${env.GIT_URL}
     def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
     def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
     
     sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{registryOrg}|${env.REGISTRY_ORG}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{registryRepo}|${env.REGISTRY_REPO}|g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's|{gitUrl}|${gitUrl}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitUrl}|${gitUrl.replace(\".get\", \"\")}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{gitBranch}|${env.BRANCH_NAME}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{gitCommitHash}|${env.GIT_COMMIT_HASH}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{gitCommitMsg}|${env.GIT_COMMIT_MESSAGE}|g' ${emailTemplateDir}/jk-email.html"
@@ -150,7 +150,7 @@ def sendEmailNotification() {
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         //body: '${SCRIPT, template="groovy-html.template"}'
-        body: '${FILE, path=${emailTemplateDir}/jk-email.html}'
+        body: '${FILE, path="jk-email.html"}'
 
     //sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
