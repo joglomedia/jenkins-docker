@@ -11,16 +11,21 @@ pipeline {
         IMAGE_REPO = "eslabsid/jenkins-docker"
         REGISTRY_URL = "https://registry.hub.docker.com/"
         REGISTRY_CREDENTIAL = "dockerhub-cred"
+        GIT_COMMIT_HASH = ""
+        GIT_COMMIT_MESSAGE = ""
     }
     stages {
         stage('Init') {
             steps {
                 script {
-                    env.GIT_HASH = sh(returnStdout: true,
-                        script: "git show --oneline | head -1 | cut -d' ' -f1",
+                    env.GIT_COMMIT_HASH = sh(returnStdout: true,
+                        script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d' ' -f1",
                     ).trim()
-                    env.IMAGE_NAME = "${env.IMAGE_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_HASH)
-                    echo "Commit ${env.GIT_HASH} checked out from ${env.BRANCH_NAME} branch"
+                    env.GIT_COMMIT_MESSAGE = sh(returnStdout: true,
+                        script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d')' -f1",
+                    ).trim()
+                    env.IMAGE_NAME = "${env.IMAGE_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
+                    echo "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
                 }
             }
         }
@@ -29,7 +34,7 @@ pipeline {
                 script {
                     def buildImage = docker.build(env.IMAGE_NAME)
                     if ( buildImage.id != "" ) {
-                        echo "Docker image ${buildImage.id} built from commit ${env.GIT_HASH}"
+                        echo "Docker image ${buildImage.id} built from commit ${env.GIT_COMMIT_HASH}"
                     } else {
                         echo "Failed building Docker image ${env.IMAGE_NAME}"
                     }
@@ -50,8 +55,7 @@ pipeline {
                     ).trim()
                     */
                     def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=''") {
-                    //docker.image(env.IMAGE_NAME).withRun("-p 9090:8080 --name=jenkins_docker") { con ->
-                        echo "Jenkins container ${container.id} listening on ${container.port}"
+                        sleep(time:10,unit:"SECONDS")
                         env.STATUS_CODE = sh(returnStdout: true,
                             script: """
                                     set +x
@@ -75,8 +79,8 @@ pipeline {
                             //    println "Push image ${env.IMAGE_NAME}:master to registry ${env.REGISTRY_URL}"
                             //    buildImage.push("latest")
                             //} else {
-                            //    println "Push image ${env.IMAGE_NAME}:${env.GIT_HASH} to registry ${env.REGISTRY_URL}"
-                            //    buildImage.push(env.GIT_HASH)
+                            //    println "Push image ${env.IMAGE_NAME}:${env.GIT_COMMIT_HASH} to registry ${env.REGISTRY_URL}"
+                            //    buildImage.push(env.GIT_COMMIT_HASH)
                             //}
                         }
                         currentBuild.result = "SUCCESS"
@@ -115,8 +119,8 @@ def cleanupBuildImage() {
 }
 
 def sendEmailNotification() {
-    emailext body: "${currentBuild.currentResult}: Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}\n More info at: ${env.BUILD_URL}",
+    emailext subject: "${DEFAULT_SUBJECT}",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
-        subject: "${currentBuild.currentResult}: Jenkins build job ${env.JOB_NAME}"
+        body: "${DEFAULT_CONTENT}"
 }
 
