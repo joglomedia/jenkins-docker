@@ -49,8 +49,7 @@ pipeline {
                     //            curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
                     //            """
                     //).trim()
-                    def JenkinsEntrypoint = "\"/sbin/tini\" \"--\" \"/usr/local/bin/jenkins.sh\""
-                    withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=\"${JenkinsEntrypoint}\"") { con ->
+                    withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint='/usr/local/bin/jenkins.sh'") { con ->
                     //docker.image(env.IMAGE_NAME).withRun("-p 9090:8080 --name=jenkins_docker") { con ->
                         def conID = con.id
                         statusCode = sh(returnStdout: true,
