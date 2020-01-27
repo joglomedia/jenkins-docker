@@ -135,7 +135,7 @@ def sendEmailNotification() {
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         //body: '${SCRIPT, template="groovy-html.template"}'
-        body: '${FILE, path="email-templates/jk-email.html"
+        body: '${FILE, path="email-templates/jk-email.html"}'
 
     sh "rm -f email-templates/jk-email.html"
 }
