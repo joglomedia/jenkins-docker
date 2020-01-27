@@ -49,9 +49,8 @@ pipeline {
                     //            curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
                     //            """
                     //).trim()
-                    withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint='/usr/local/bin/jenkins.sh'") { con ->
+                    def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint='/usr/local/bin/jenkins.sh'") {
                     //docker.image(env.IMAGE_NAME).withRun("-p 9090:8080 --name=jenkins_docker") { con ->
-                        def conID = con.id
                         statusCode = sh(returnStdout: true,
                             script: """
                                     set +x
@@ -59,7 +58,7 @@ pipeline {
                                     """
                         ).trim()
                     }
-                    echo "Get status code ${statusCode} from container ${con.id}"
+                    echo "Get status code ${statusCode} from container ${container.id}"
                 }
             }
         }
@@ -91,9 +90,7 @@ pipeline {
         stage('Cleanup Image') {
             steps {
                 script {
-                    sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
-                    sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
-                    sh "docker rmi ${env.IMAGE_NAME}"
+                    cleanupBuildImage()
                 }
             }
         }
@@ -101,11 +98,17 @@ pipeline {
     post {
         always {
             script {
-                sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
-                sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
-                sh "docker rmi ${env.IMAGE_NAME}"
+                cleanupBuildImage()
             }
             cleanWs()
         }
     }
 }
+
+
+def cleanupBuildImage() {
+    sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
+    sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
+    sh "docker rmi ${env.IMAGE_NAME}"
+}
+
