@@ -11,8 +11,6 @@ pipeline {
         IMAGE_REPO = "eslabsid/jenkins-docker"
         REGISTRY_URL = "https://registry.hub.docker.com/"
         REGISTRY_CREDENTIAL = "dockerhub-cred"
-        GIT_COMMIT_HASH = ""
-        GIT_COMMIT_MESSAGE = ""
     }
     stages {
         stage('Init') {
@@ -44,7 +42,7 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    /*def container = buildImage.run("-p 9090:8080 --name=jenkins_docker")
+                    def container = buildImage.run("-p 9090:8080 --name=jenkins_docker")
                     def conport = container.port()
                     echo "${buildImage.id} container is running at host:port ${conport}"
                     env.STATUS_CODE = sh(returnStdout: true,
@@ -53,8 +51,7 @@ pipeline {
                                 curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
                                 """
                     ).trim()
-                    */
-                    def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=''") {
+                    /*def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=''") {
                         sleep(time:10,unit:"SECONDS")
                         env.STATUS_CODE = sh(returnStdout: true,
                             script: """
@@ -62,7 +59,7 @@ pipeline {
                                     curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:8080
                                     """
                         ).trim()
-                    }
+                    }*/
                     echo "Get status code ${env.STATUS_CODE} from container ${container.id}"
                 }
             }
@@ -70,7 +67,7 @@ pipeline {
         stage('Register Image') {
             steps {
                 script {
-                    if ( env.STATUS_CODE != "000" ) {
+                    if ( env.STATUS_CODE == "200" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry(env.REGISTRY_URL, env.REGISTRY_CREDENTIAL) {
                             echo "Push image ${env.IMAGE_NAME} to registry ${env.REGISTRY_URL}"
@@ -120,8 +117,8 @@ def cleanupBuildImage() {
 
 def sendEmailNotification() {
     emailext mimeType: 'text/html',
-        subject: "Jenkins build ${currentBuild.currentResult}: ${env.JOB_NAME}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH}",
+        subject: "Jenkins build ${currentBuild.currentResult}: ${env.JOB_NAME}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
-        body: '${SCRIPT, template="groovy-html.template"}'
+        body: '${SCRIPT, template="jk-email-html.template"}'
 }
 
