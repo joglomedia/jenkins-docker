@@ -112,9 +112,13 @@ def testBuildImage() {
 }
 
 def cleanupBuildImage() {
-    docker ps -q -f \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container stop"
-    docker container ls -a -q -f \"name=jenkins-docker-test\" | xargs -r docker container rm"
-    docker rmi ${env.IMAGE_NAME}"
+    sh(returnStdout: true,
+        script: '''
+            docker ps -q -f "name=jenkins-docker-test" | xargs --no-run-if-empty docker container stop
+            docker container ls -a -q -f "name=jenkins-docker-test" | xargs -r docker container rm
+            docker rmi ${env.IMAGE_NAME}"
+            '''
+    )
 }
 
 def sendEmailNotification() {
@@ -143,8 +147,8 @@ def sendEmailNotification() {
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         //body: '${SCRIPT, template="groovy-html.template"}'
-        body: '${FILE, path=""${emailTemplateDir}/jk-email.html""}'
+        body: '${FILE, path="${emailTemplateDir}/jk-email.html"}'
 
-    rm -f "${emailTemplateDir}/jk-email.html""
+    sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
 
