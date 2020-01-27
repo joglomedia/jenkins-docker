@@ -27,9 +27,9 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    def image = docker.build(env.IMAGE_NAME)
-                    if ( image.id != "" ) {
-                        echo "Docker image ${image.id} built from commit ${env.GIT_HASH}"
+                    def buildImage = docker.build(env.IMAGE_NAME)
+                    if ( buildImage.id != "" ) {
+                        echo "Docker image ${buildImage.id} built from commit ${env.GIT_HASH}"
                     } else {
                         echo "Failed building Docker image ${env.IMAGE_NAME}"
                     }
@@ -39,21 +39,22 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    //def container = image.run("-p 8080 --name=jenkins_docker")
-                    //def conport = container.port(8080)
-                    //println image.id + " container is running at host:port " + conport
+                    def statusCode = "000"
+                    //def buildContainer = buildImage.run("-p 8080 --name=jenkins_docker")
+                    //def conport = buildContainer.port()
+                    //echo "${buildImage.id} container is running at host:port ${conport}"
                     //env.STATUS_CODE = sh(returnStdout: true,
-                    //    script: '''
+                    //    script: """
                     //            set +x
-                    //            curl -w "%{http_code}" -o /dev/null -s http://\"${contport}\"
-                    //            '''
+                    //            curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
+                    //            """
                     //).trim()
-                    docker.withDockerContainer(env.IMAGE_NAME, "-p 9090:8080") {
-                    //docker.image(env.IMAGE_NAME).inside("-p 9090:8080") {
-                        env.STATUS_CODE = sh(returnStdout: true,
+                    //docker.withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker") {
+                    docker.image("${env.IMAGE_NAME}").withRun(args: "-p 9090:8080 --name=jenkins_docker") {
+                        statusCode = sh(returnStdout: true,
                             script: """
                                     set +x
-                                    curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
+                                    curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:8080
                                     """
                         ).trim()
                     }
@@ -63,17 +64,17 @@ pipeline {
         stage('Register Image') {
             steps {
                 script {
-                    if ( env.STATUS_CODE == "200" ) {
+                    if ( statusCode == "200" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry(env.REGISTRY_URL, env.REGISTRY_CREDENTIAL) {
                             echo "Push image ${env.IMAGE_NAME} to registry ${env.REGISTRY_URL}"
-                            image.push()
+                            buildImage.push()
                             //if ( env.BRANCH_NAME == "master" ) {
                             //    println "Push image ${env.IMAGE_NAME}:master to registry ${env.REGISTRY_URL}"
-                            //    image.push("latest")
+                            //    buildImage.push("latest")
                             //} else {
                             //    println "Push image ${env.IMAGE_NAME}:${env.GIT_HASH} to registry ${env.REGISTRY_URL}"
-                            //    image.push(env.GIT_HASH)
+                            //    buildImage.push(env.GIT_HASH)
                             //}
                         }
                         currentBuild.result = "SUCCESS"
@@ -85,7 +86,7 @@ pipeline {
 
             }
         }
-        stage('Clean up Image') {
+        stage('Cleanup Image') {
             steps {
                 script {
                     sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
