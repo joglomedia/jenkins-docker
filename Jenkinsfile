@@ -48,12 +48,12 @@ pipeline {
                     //            curl -w "%{http_code}" -o /dev/null -s http://\"${contport}\"
                     //            '''
                     //).trim()
-                    //docker.withDockerContainer(env.IMAGE_NAME) {
-                    docker.image(env.IMAGE_NAME).inside("-p 9090:8080") {
+                    docker.withDockerContainer(env.IMAGE_NAME, "-p 9090:8080") {
+                    //docker.image(env.IMAGE_NAME).inside("-p 9090:8080") {
                         env.STATUS_CODE = sh(returnStdout: true,
                             script: """
                                     set +x
-                                    curl -w \"%{http_code}\" -o /dev/null -s http://0.0.0.0:8080
+                                    curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
                                     """
                         ).trim()
                     }
@@ -78,7 +78,7 @@ pipeline {
                         }
                         currentBuild.result = "SUCCESS"
                     } else {
-                        println "Humans are mortals."
+                        echo "Humans are mortals."
                         currentBuild.result = "FAILURE"
                     }
                 }
