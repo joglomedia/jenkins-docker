@@ -31,7 +31,7 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    def buildImage = docker.build(env.IMAGE_NAME, '--rm')
+                    def buildImage = docker.build(env.IMAGE_NAME)
                     if ( buildImage.id != "" ) {
                         println "Docker image ${buildImage.id} built from commit ${env.GIT_COMMIT_HASH}"
                     } else {
