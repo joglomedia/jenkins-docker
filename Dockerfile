@@ -1,5 +1,6 @@
 # Use Jenkins latest
 FROM jenkins/jenkins:latest
+
 LABEL maintainer Edi Septriyanto <eslabs.id@gmail.com> architecture="AMD64/x86_64"
 LABEL jenkins-version="latest" debian-version="stretch" build="25-Jan-2020"
 
