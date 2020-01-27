@@ -24,6 +24,9 @@ pipeline {
                         script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d')' -f1",
                     ).trim()
                     env.IMAGE_NAME = "${env.REGISTRY_ORG}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
+                    env.GIT_COMMITTER_EMAIL = sh(returnStdout: true,
+                        script: 'git log --oneline --format="%ae" ${env.GIT_COMMIT} | head -1',
+                    ).trim()
                     println "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
                 }
             }
@@ -109,12 +112,14 @@ def testBuildImage() {
     ).trim()
     println "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
 
+    /*
     env.JENKINS_PASS = sh(returnStdout: true,
         script: "docker exec -i jenkins-docker-test cat /var/jenkins_home/secrets/initialAdminPassword"
     ).trim()
     if ( env.JENKINS_PASS != "" ) {
         println "Get initial admin password ${env.JENKINS_PASS} from container jenkins-docker-test"
     }
+    */
 }
 
 def cleanupBuildImage() {
@@ -129,6 +134,7 @@ def sendEmailNotification() {
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
     def rgitUrl = ${env.GIT_URL}
     def gitUrl = rgitUrl.replace(".get", "")
+    def gitCommitterAvatar = generateMD5(env.GIT_COMMITTER_EMAIL)
     def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
     def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
     
@@ -140,6 +146,7 @@ def sendEmailNotification() {
     sh "sed -i 's|{gitCommitHash}|${env.GIT_COMMIT_HASH}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{gitCommitMsg}|${env.GIT_COMMIT_MESSAGE}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{gitCommitterName}|${env.GIT_COMMITTER_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitterAvatar}|${gitCommitterAvatar}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{jobBaseName}|${env.JOB_BASE_NAME}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{buildUrl}|${env.BUILD_URL}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
@@ -156,3 +163,9 @@ def sendEmailNotification() {
     //sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
 
+
+import java.security.MessageDigest
+
+def generateMD5(String s){
+    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+}
