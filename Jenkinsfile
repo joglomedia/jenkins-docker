@@ -51,7 +51,7 @@ pipeline {
         stage('Register Image') {
             steps {
                 script {
-                    if ( env.STATUS_CODE == "200" ) {
+                    if ( env.STATUS_CODE == "200" || env.STATUS_CODE == "403" || env.JENKINS_PASS != "" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry(env.REGISTRY_URL, env.REGISTRY_CREDENTIAL) {
                             println "Push image ${env.IMAGE_NAME} to registry ${env.REGISTRY_URL}"
@@ -94,17 +94,20 @@ pipeline {
 
 
 def testBuildImage() {
-    sh "docker container run -d --name=jenkins-docker-test -p 9090:8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
+    sh "docker container run -d --name=jenkins-docker-test -p 49001:8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
     sleep(time:10,unit:"SECONDS")
     def containerIP = sh(returnStdout: true,
-        script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-builder"
+        script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-test"
     ).trim()
-    echo "Get jenkins-docker-test container listening on http://${containerIP}:9090"
+    echo "Get jenkins-docker-test container listening on http://${containerIP}:49001"
     env.STATUS_CODE = sh(returnStdout: true,
         script: """
             set +x
-            curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:9090
+            curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:49001
             """
+    ).trim()
+    env.JENKINS_PASS = sh(returnStdout: true,
+        script: "docker exec -it jenkins-docker-test cat /var/jenkins_home/secrets/initialAdminPassword"
     ).trim()
 }
 
@@ -115,7 +118,8 @@ def cleanupBuildImage() {
 }
 
 def sendEmailNotification() {
-    def emailTemplatePath = "email-templates/jk-email-template.html"
+    def emailTemplateDir = "/var/jenkins_home/email-templates"
+    def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
 
     sh "cp ${emailTemplatePath} email-templates/jk-email.html"
     sh "sed -i \"s/\${registryOrg}/${env.REGISTRY_ORG}/g\" ${emailTemplatePath}"
@@ -135,8 +139,8 @@ def sendEmailNotification() {
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         //body: '${SCRIPT, template="groovy-html.template"}'
-        body: '${FILE, path="email-templates/jk-email.html"}'
+        body: '${FILE, path="${emailTemplateDir}/jk-email.html"}'
 
-    sh "rm -f email-templates/jk-email.html"
+    sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
 
