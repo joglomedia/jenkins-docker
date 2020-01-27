@@ -7,16 +7,16 @@
             <tbody><tr>
               <td id="repo-username-section" align="center" valign="top" style="padding-bottom:20px;padding-bottom:20px">
                 <a id="repo-username-link" style="color:#333333;text-decoration:none;border-bottom:1px solid #333333;padding-bottom:4px;color:#333333;border-bottom:1px solid #333333;text-decoration:none;padding-bottom:4px" href="http://94.237.72.184:8080/blue/organizations/jenkins/jenkins-docker/activity?utm_medium=notification&amp;utm_source=email" target="_blank">
-                  <p style="margin:0px;font-size:30px;font-weight:600;line-height:36px;padding-left:5px;display:inline;font-size:30px;font-weight:600;line-height:36px;padding-right:5px;padding-left:0px">${registryOrg}</p>
+                  <p style="margin:0px;font-size:30px;font-weight:600;line-height:36px;padding-left:5px;display:inline;font-size:30px;font-weight:600;line-height:36px;padding-right:5px;padding-left:0px">{registryOrg}</p>
                   <p id="repo-slug-divider" style="margin:0px;font-size:30px;font-weight:100;color:#9ea3a8;display:inline;font-size:30px;font-weight:100;color:#9ea3a8">/</p>
-                  <p style="margin:0px;font-size:30px;font-weight:600;line-height:36px;padding-left:5px;display:inline;font-size:30px;font-weight:600;line-height:36px;padding-left:5px">${registryRepo}</p>
+                  <p style="margin:0px;font-size:30px;font-weight:600;line-height:36px;padding-left:5px;display:inline;font-size:30px;font-weight:600;line-height:36px;padding-left:5px">{registryRepo}</p>
 </a>              </td>
             </tr>
             
             <tr>
               <td id="branch-name-section" align="center" valign="top" style="padding-bottom:35px">
                 <p id="branch-name" style="margin:0px;font-size:28px;font-weight:300;margin:0px;font-size:28px;font-weight:300">
-                  <img alt="branch icon" style="width:16px;height:auto;padding-right:8px;vertical-align:bottom;width:16px;height:auto;padding-right:8px;vertical-align:bottom" src="https://s3.amazonaws.com/travis-email-assets/branch.png" class="CToWUd"><a id="branch-name-link" style="color:#333333;line-height:36px;text-decoration:none;border-bottom:1px solid #333333;text-decoration:none;border-bottom:1px solid #333333;padding-bottom:2px;line-height:36px" href="${gitUrl}/tree/${gitBranch}" target="_blank">${gitBranch}</a>
+                  <img alt="branch icon" style="width:16px;height:auto;padding-right:8px;vertical-align:bottom;width:16px;height:auto;padding-right:8px;vertical-align:bottom" src="https://s3.amazonaws.com/travis-email-assets/branch.png" class="CToWUd"><a id="branch-name-link" style="color:#333333;line-height:36px;text-decoration:none;border-bottom:1px solid #333333;text-decoration:none;border-bottom:1px solid #333333;padding-bottom:2px;line-height:36px" href="{gitUrl}/tree/{gitBranch}" target="_blank">{gitBranch}</a>
                 </p>
               </td>
             </tr>
@@ -27,11 +27,11 @@
                   <tbody><tr style="background:rgba(50,210,130,0.1)">
                     <td id="status-icon-section" align="center" valign="top" style="border-bottom:1px solid #32d282;padding:15px 15px">
                     <div style="float:left">
-                      <div style="display:inline"><img alt="build has passed" style="display:inline;vertical-align:sub;width:17px;height:17px;padding-right:8px" src="https://s3.amazonaws.com/travis-email-assets/status-${imgStatusSrc}.png" class="CToWUd"></div><div style="display:inline"><a id="status-section-message" class="${cssStatusClass}" style="color:${cssBgColor};font-size:16px;font-weight:600" href="http://94.237.72.184:8080/blue/organizations/jenkins/${jobBaseName}/detail/${gitBranch}/${buildNumber}/pipeline?utm_medium=notification&amp;utm_source=email" target="_blank">Build #${buildNumber} ${buildStatus}</a></div>
+                      <div style="display:inline"><img alt="build has passed" style="display:inline;vertical-align:sub;width:17px;height:17px;padding-right:8px" src="https://s3.amazonaws.com/travis-email-assets/status-{imgStatusSrc}.png" class="CToWUd"></div><div style="display:inline"><a id="status-section-message" class="{cssStatusClass}" style="color:{cssBgColor};font-size:16px;font-weight:600" href="http://94.237.72.184:8080/blue/organizations/jenkins/{jobBaseName}/detail/{gitBranch}/{buildNumber}/pipeline?utm_medium=notification&amp;utm_source=email" target="_blank">Build #{buildNumber} {buildStatus}</a></div>
                     </div>
                       <div style="display:inline;float:left"><img id="arrow" alt="arrow to build time" style="width:7px;height:auto;vertical-align:text-bottom;padding:0px 8px" src="https://s3.amazonaws.com/travis-email-assets/success-arrow.png" class="CToWUd"></div>
                     <div style="float:right">
-                      <span><img id="build-time-clock-icon" alt="clock icon" style="width:15px;height:17px;padding-right:8px;vertical-align:sub" src="https://s3.amazonaws.com/travis-email-assets/time.png" class="CToWUd"></span><span style="font-size:14px">${buildDuration}</span>
+                      <span><img id="build-time-clock-icon" alt="clock icon" style="width:15px;height:17px;padding-right:8px;vertical-align:sub" src="https://s3.amazonaws.com/travis-email-assets/time.png" class="CToWUd"></span><span style="font-size:14px">{buildDuration}</span>
                     </div>
                     </td>
                   </tr>
@@ -39,17 +39,17 @@
                     <td id="user-avatar-changeset-section" align="center" valign="top" style="padding-bottom:32px;padding:20px 15px 35px 15px">
                       <div id="user-avatar-changeset-left" style="float:left;float:left">
                         <p style="margin:0px;display:inline;font-size:14px;font-weight:700;color:#333333">
-                          <img alt="${gitCommitterName} avatar" style="width:22px;height:auto;border-radius:10px;vertical-align:middle;margin-right:8px" src="https://secure.gravatar.com/avatar/5338caa3b417ca2d7b889cb4abd753d3" class="CToWUd">${gitCommitterName}
+                          <img alt="{gitCommitterName} avatar" style="width:22px;height:auto;border-radius:10px;vertical-align:middle;margin-right:8px" src="https://secure.gravatar.com/avatar/5338caa3b417ca2d7b889cb4abd753d3" class="CToWUd">{gitCommitterName}
                         </p>
                       </div>
                       <div id="user-avatar-changeset-right" style="float:right;float:right">
-                        <a id="changeset-link" style="font-size:14px;font-weight:600;color:#0068ff;font-size:14px;color:#0068ff;font-weight:600" href="${gitUrl}/compare/${gitBranch}" target="_blank">${gitCommitHash} CHANGESET →</a>
+                        <a id="changeset-link" style="font-size:14px;font-weight:600;color:#0068ff;font-size:14px;color:#0068ff;font-weight:600" href="{gitUrl}/compare/{gitBranch}" target="_blank">{gitCommitHash} CHANGESET →</a>
                       </div>
                     </td>
                   </tr>
                   <tr>
                     <td id="commit-message-section" align="center" valign="top" style="min-height:104px;padding:0px 20px 20px 20px;min-height:104px;padding:0px 15px 20px 15px">
-                      <p id="commit-message" style="margin:0px;font-family:cousine,monospace;font-size:14px;line-height:22px;font-family:cousine,monospace;font-size:14px;text-align:left;line-height:22px">${gitCommitMsg}</p>
+                      <p id="commit-message" style="margin:0px;font-family:cousine,monospace;font-size:14px;line-height:22px;font-family:cousine,monospace;font-size:14px;text-align:left;line-height:22px">{gitCommitMsg}</p>
                     </td>
                   </tr>
                 </tbody></table>
@@ -105,7 +105,7 @@
             <tr>
               <td id="email-footer-section" align="center" valign="top" style="font-size:10px;line-height:200%;text-align:center;color:#9ea3a8;padding-top:0px">
                 <span>
-                    <a href="https://travis-ci.org/account/preferences/unsubscribe?repository=5937819&amp;utm_medium=notification&amp;utm_source=email" style="color:#9ea3a8" target="_blank">Unsubscribe</a> from build emails from the ${env.JOB_NAME} repository.
+                    <a href="https://travis-ci.org/account/preferences/unsubscribe?repository=5937819&amp;utm_medium=notification&amp;utm_source=email" style="color:#9ea3a8" target="_blank">Unsubscribe</a> from build emails from the {env.JOB_NAME} repository.
                 </span>
               </td>
             </tr>

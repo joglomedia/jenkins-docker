@@ -99,18 +99,18 @@ def testBuildImage() {
     def containerIP = sh(returnStdout: true,
         script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-test"
     ).trim()
-    echo "Get jenkins-docker-test container listening on http://${containerIP}:8080"
+    echo "Run jenkins-docker-test container listening on http://${containerIP}:49001"
 
     env.STATUS_CODE = sh(returnStdout: true,
         script: """
             set +x
-            curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:8080
+            curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:49001
             """
     ).trim()
     println "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
 
     env.JENKINS_PASS = sh(returnStdout: true,
-        script: "docker exec jenkins-docker-test cat /var/jenkins_home/secrets/initialAdminPassword"
+        script: "docker exec -i jenkins-docker-test cat /var/jenkins_home/secrets/initialAdminPassword"
     ).trim()
     if ( env.JENKINS_PASS != "" ) {
         println "Get initial admin password ${env.JENKINS_PASS} from container jenkins-docker-test"
@@ -126,20 +126,21 @@ def cleanupBuildImage() {
 def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
-
+    def buildStatus = ${currentBuild.currentResult ? 'passed' : 'failed'}
+    
     sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${registryOrg}/${env.REGISTRY_ORG}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${registryRepo}/${env.REGISTRY_REPO}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${gitUrl}/${env.GIT_URL}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${gitBranch}/${env.GIT_BRANCH}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${gitCommitHash}/${env.GIT_COMMIT_HASH}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${gitCommitMsg}/${env.GIT_COMMIT_MESSAGE}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${gitCommitterName}/${env.GIT_COMMITTER_NAME}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${jobBaseName}/${env.JOB_BASE_NAME}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${buildNumber}/${env.BUILD_NUMBER}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${buildDuration}/${currentBuild.durationString}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${buildStatus}/${currentBuild.currentResult ? 'was broken' : 'passed'}/g\" ${emailTemplateDir}/jk-email.html"
-    sh "sed -i \"s/\${imgStatusSrc}/${currentBuild.currentResult ? 'passed' : 'failed'}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{registryOrg}/${env.REGISTRY_ORG}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{registryRepo}/${env.REGISTRY_REPO}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{gitUrl}/${env.GIT_URL}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{gitBranch}/${env.GIT_BRANCH}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{gitCommitHash}/${env.GIT_COMMIT_HASH}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{gitCommitMsg}/${env.GIT_COMMIT_MESSAGE}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{gitCommitterName}/${env.GIT_COMMITTER_NAME}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{jobBaseName}/${env.JOB_BASE_NAME}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{buildNumber}/${env.BUILD_NUMBER}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{buildDuration}/${currentBuild.durationString}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{buildStatus}/${buildStatus}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{imgStatusSrc}/${buildStatus}/g' ${emailTemplateDir}/jk-email.html"
 
     emailext mimeType: 'text/html',
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
@@ -147,6 +148,6 @@ def sendEmailNotification() {
         //body: '${SCRIPT, template="groovy-html.template"}'
         body: '${FILE, path="${emailTemplateDir}/jk-email.html"}'
 
-    sh "rm -f ${emailTemplateDir}/jk-email.html"
+    //sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
 
