@@ -49,8 +49,8 @@ pipeline {
                     //            curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
                     //            """
                     //).trim()
-                    //docker.withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker") {
-                    docker.image(env.IMAGE_NAME).withRun("-p 9090:8080 --name=jenkins_docker") { con ->
+                    withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker") { con ->
+                    //docker.image(env.IMAGE_NAME).withRun("-p 9090:8080 --name=jenkins_docker") { con ->
                         def conID = con.id
                         statusCode = sh(returnStdout: true,
                             script: """
