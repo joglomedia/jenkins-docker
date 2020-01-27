@@ -9,7 +9,7 @@ pipeline {
     environment {
         REGISTRY_ORG = "eslabsid"
         REGISTRY_REPO = "jenkins-docker"
-        REGISTRY_URL = "https://registry.hub.docker.com/"
+        REGISTRY_URL = "https://index.docker.io/v1/"
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
     stages {
@@ -58,6 +58,7 @@ pipeline {
                             println "Push image ${env.IMAGE_NAME} to DockerHub registry"
                             //buildImage.push()
                             sh "docker push ${env.IMAGE_NAME}"
+                            sh "docker logout"
                         }
                         currentBuild.result = "SUCCESS"
                     } else {
@@ -116,6 +117,7 @@ def testBuildImage() {
 }
 
 def cleanupBuildImage() {
+    sleep(time:10,unit:"SECONDS")
     sh "docker ps -qf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container stop"
     sh "docker container ls -aqf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container rm"
     sh "docker images -q ${env.IMAGE_NAME} | xargs --no-run-if-empty docker rmi"
@@ -128,7 +130,11 @@ def sendEmailNotification() {
     def rgitUrl = "${env.GIT_URL}"
     def gitUrl = rgitUrl.replace(".get", "")
     def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
-    def gitCommitterAvatar = sh("md5sum <<<${env.GIT_COMMITTER_EMAIL}")
+    def gitCommitterAvatar = sh(returnStdout: true,
+        script: """
+            md5sum <<<${env.GIT_COMMITTER_EMAIL}
+            """
+    ).trim()
     def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
     def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
     
