@@ -8,7 +8,7 @@
 pipeline {
     agent any
     environment {
-        REGISTRY_ORGANIZATION = "eslabsid"
+        REGISTRY_ORG = "eslabsid"
         REGISTRY_REPO = "jenkins-docker"
         REGISTRY_URL = "https://registry.hub.docker.com/"
         REGISTRY_CREDENTIAL = "dockerhub-cred"
@@ -23,7 +23,7 @@ pipeline {
                     env.GIT_COMMIT_MESSAGE = sh(returnStdout: true,
                         script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d')' -f1",
                     ).trim()
-                    env.IMAGE_NAME = "${env.REGISTRY_ORGANIZATION}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
+                    env.IMAGE_NAME = "${env.REGISTRY_ORG}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
                     println "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
                 }
             }
@@ -43,7 +43,7 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    env.STATUS_CODE = testBuildImage()
+                    testBuildImage()
                     println "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
                 }
             }
@@ -94,18 +94,18 @@ pipeline {
 
 
 def testBuildImage() {
-    sh "docker container run -d --name=jenkins-docker-test -p 9090:8080 ${env.IMAGE_NAME}"
+    sh "docker container run -d --name=jenkins-docker-test -p 9090:8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
     sleep(time:10,unit:"SECONDS")
     def containerIP = sh(returnStdout: true,
         script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-builder"
     ).trim()
-    def status_code = sh(returnStdout: true,
+    echo "Get jenkins-docker-test conatiner listening on http://${containerIP}:9090"
+    env.STATUS_CODE = sh(returnStdout: true,
         script: """
             set +x
             curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:9090
             """
     ).trim()
-    return status_code
 }
 
 def cleanupBuildImage() {
@@ -116,7 +116,7 @@ def cleanupBuildImage() {
 
 def sendEmailNotification() {
     emailext mimeType: 'text/html',
-        subject: "Jenkins build ${currentBuild.currentResult}: ${env.JOB_BASE_NAME}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
+        subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         body: '${SCRIPT, template="jk-email-html.template"}'
 }
