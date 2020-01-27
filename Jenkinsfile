@@ -99,7 +99,7 @@ def testBuildImage() {
     def containerIP = sh(returnStdout: true,
         script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-builder"
     ).trim()
-    echo "Get jenkins-docker-test conatiner listening on http://${containerIP}:9090"
+    echo "Get jenkins-docker-test container listening on http://${containerIP}:9090"
     env.STATUS_CODE = sh(returnStdout: true,
         script: """
             set +x
@@ -115,9 +115,28 @@ def cleanupBuildImage() {
 }
 
 def sendEmailNotification() {
+    def emailTemplatePath = "email-templates/jk-email-template.html"
+
+    sh "cp ${emailTemplatePath} email-templates/jk-email.html"
+    sh "sed -i \"s/\${registryOrg}/${env.REGISTRY_ORG}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${registryRepo}/${env.REGISTRY_REPO}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${gitUrl}/${env.GIT_URL}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${gitBranch}/${env.GIT_BRANCH}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${gitCommitHash}/${env.GIT_COMMIT_HASH}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${gitCommitMsg}/${env.GIT_COMMIT_MESSAGE}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${gitCommitterName}/${env.GIT_COMMITTER_NAME}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${jobBaseName}/${env.JOB_BASE_NAME}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${buildNumber}/${env.BUILD_NUMBER}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${buildDuration}/${currentBuild.durationString}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${buildStatus}/${currentBuild.currentResult ? 'was broken' : 'passed'}/g\" ${emailTemplatePath}"
+    sh "sed -i \"s/\${imgStatusSrc}/${currentBuild.currentResult ? 'passed' : 'failed'}/g\" ${emailTemplatePath}"
+
     emailext mimeType: 'text/html',
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
-        body: '${SCRIPT, template="jk-email-html.template"}'
+        //body: '${SCRIPT, template="groovy-html.template"}'
+        body: '${FILE, path="email-templates/jk-email.html"
+
+    sh "rm -f email-templates/jk-email.html"
 }
 
