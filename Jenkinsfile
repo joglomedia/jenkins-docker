@@ -120,8 +120,8 @@ def cleanupBuildImage() {
 
 def sendEmailNotification() {
     emailext mimeType: 'text/html',
-        subject: $PROJECT_DEFAULT_SUBJECT,
+        subject: "Jenkins build ${currentBuild.currentResult}: ${env.JOB_NAME}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH}",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
-        body: $PROJECT_DEFAULT_CONTENT
+        body: '${SCRIPT, template="groovy-html.template"}'
 }
 
