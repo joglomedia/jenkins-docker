@@ -127,19 +127,19 @@ def sendEmailNotification() {
 
     sh(returnStdout: true,
         script: '''
-            cp -f "${emailTemplatePath}" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${registryOrg}/${env.REGISTRY_ORG}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${registryRepo}/${env.REGISTRY_REPO}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${gitUrl}/${env.GIT_URL}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${gitBranch}/${env.GIT_BRANCH}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${gitCommitHash}/${env.GIT_COMMIT_HASH}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${gitCommitMsg}/${env.GIT_COMMIT_MESSAGE}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${gitCommitterName}/${env.GIT_COMMITTER_NAME}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${jobBaseName}/${env.JOB_BASE_NAME}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${buildNumber}/${env.BUILD_NUMBER}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${buildDuration}/${currentBuild.durationString}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${buildStatus}/${currentBuild.currentResult ? 'was broken' : 'passed'}/g" "${emailTemplateDir}/jk-email.html"
-            sed -i "s/\${imgStatusSrc}/${currentBuild.currentResult ? 'passed' : 'failed'}/g" "${emailTemplateDir}/jk-email.html"
+            cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${registryOrg}/${env.REGISTRY_ORG}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${registryRepo}/${env.REGISTRY_REPO}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${gitUrl}/${env.GIT_URL}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${gitBranch}/${env.GIT_BRANCH}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${gitCommitHash}/${env.GIT_COMMIT_HASH}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${gitCommitMsg}/${env.GIT_COMMIT_MESSAGE}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${gitCommitterName}/${env.GIT_COMMITTER_NAME}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${jobBaseName}/${env.JOB_BASE_NAME}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${buildNumber}/${env.BUILD_NUMBER}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${buildDuration}/${currentBuild.durationString}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${buildStatus}/${currentBuild.currentResult ? 'was broken' : 'passed'}/g" ${emailTemplateDir}/jk-email.html
+            sed -i "s/\${imgStatusSrc}/${currentBuild.currentResult ? 'passed' : 'failed'}/g" ${emailTemplateDir}/jk-email.html
             '''
     )
 
