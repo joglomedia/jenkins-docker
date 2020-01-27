@@ -84,8 +84,8 @@ pipeline {
     post {
         always {
             script {
-                sendEmailNotification()
                 cleanupBuildImage()
+                sendEmailNotification()
             }
             cleanWs()
         }
@@ -94,7 +94,7 @@ pipeline {
 
 
 def testBuildImage() {
-    sh "docker container run -d --name=jenkins-docker-test -p 8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
+    sh "docker container run -d --name=jenkins-docker-test -p 49001:8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
     sleep(time:10,unit:"SECONDS")
     def containerIP = sh(returnStdout: true,
         script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-test"
@@ -125,23 +125,19 @@ def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
 
-    sh(returnStdout: true,
-        script: '''
-            cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${registryOrg}/${env.REGISTRY_ORG}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${registryRepo}/${env.REGISTRY_REPO}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${gitUrl}/${env.GIT_URL}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${gitBranch}/${env.GIT_BRANCH}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${gitCommitHash}/${env.GIT_COMMIT_HASH}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${gitCommitMsg}/${env.GIT_COMMIT_MESSAGE}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${gitCommitterName}/${env.GIT_COMMITTER_NAME}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${jobBaseName}/${env.JOB_BASE_NAME}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${buildNumber}/${env.BUILD_NUMBER}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${buildDuration}/${currentBuild.durationString}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${buildStatus}/${currentBuild.currentResult ? 'was broken' : 'passed'}/g" ${emailTemplateDir}/jk-email.html
-            sed -i "s/\${imgStatusSrc}/${currentBuild.currentResult ? 'passed' : 'failed'}/g" ${emailTemplateDir}/jk-email.html
-            '''
-    )
+    sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${registryOrg}/${env.REGISTRY_ORG}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${registryRepo}/${env.REGISTRY_REPO}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${gitUrl}/${env.GIT_URL}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${gitBranch}/${env.GIT_BRANCH}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${gitCommitHash}/${env.GIT_COMMIT_HASH}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${gitCommitMsg}/${env.GIT_COMMIT_MESSAGE}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${gitCommitterName}/${env.GIT_COMMITTER_NAME}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${jobBaseName}/${env.JOB_BASE_NAME}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${buildNumber}/${env.BUILD_NUMBER}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${buildDuration}/${currentBuild.durationString}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${buildStatus}/${currentBuild.currentResult ? 'was broken' : 'passed'}/g\" ${emailTemplateDir}/jk-email.html"
+    sh "sed -i \"s/\\${imgStatusSrc}/${currentBuild.currentResult ? 'passed' : 'failed'}/g\" ${emailTemplateDir}/jk-email.html"
 
     emailext mimeType: 'text/html',
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
