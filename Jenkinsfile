@@ -94,7 +94,7 @@ pipeline {
 
 
 def testBuildImage() {
-    docker container run -d --name=jenkins-docker-test -p 8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
+    sh "docker container run -d --name=jenkins-docker-test -p 8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
     sleep(time:10,unit:"SECONDS")
     def containerIP = sh(returnStdout: true,
         script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-test"
