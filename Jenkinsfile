@@ -120,7 +120,8 @@ def testBuildImage() {
 def cleanupBuildImage() {
     sh "docker ps -qf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container stop"
     sh "docker container ls -aqf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container rm"
-    sh "docker rmi -f ${env.IMAGE_NAME}"
+    sh "docker images -q ${env.IMAGE_NAME} | xargs --no-run-if-empty docker rmi"
+    sh "docker system prune"
 }
 
 def sendEmailNotification() {
@@ -130,18 +131,18 @@ def sendEmailNotification() {
     def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
     
     sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{registryOrg}/${env.REGISTRY_ORG}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{registryRepo}/${env.REGISTRY_REPO}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{gitUrl}/${env.GIT_URL}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{gitBranch}/${env.GIT_BRANCH}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{gitCommitHash}/${env.GIT_COMMIT_HASH}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{gitCommitMsg}/${env.GIT_COMMIT_MESSAGE}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{gitCommitterName}/${env.GIT_COMMITTER_NAME}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{jobBaseName}/${env.JOB_BASE_NAME}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{buildNumber}/${env.BUILD_NUMBER}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{buildDuration}/${currentBuild.durationString}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{buildStatus}/${buildStatus}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{cssBgColor}/${cssBgColor}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{registryOrg}|${env.REGISTRY_ORG}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{registryRepo}|${env.REGISTRY_REPO}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitUrl}|${env.GIT_URL}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitBranch}|${env.BRANCH_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitHash}|${env.GIT_COMMIT_HASH}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitMsg}|${env.GIT_COMMIT_MESSAGE}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitterName}|${env.GIT_COMMITTER_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{jobBaseName}|${env.JOB_BASE_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{buildDuration}|${currentBuild.durationString}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{buildStatus}|${buildStatus}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{cssBgColor}|${cssBgColor}|g' ${emailTemplateDir}/jk-email.html"
 
     emailext mimeType: 'text/html',
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
