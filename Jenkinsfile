@@ -93,7 +93,7 @@ pipeline {
 
 
 def testBuildImage() {
-    sh "docker container run -d --name=jenkins-docker-test -p 49001:8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
+    sh "docker container run -d --name=jenkins-docker-test -p 49001 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
     sleep(time:10,unit:"SECONDS")
 
     def containerIP = sh(returnStdout: true,
@@ -126,7 +126,8 @@ def cleanupBuildImage() {
 def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
-    def buildStatus = ${currentBuild.currentResult ? 'passed' : 'failed'}
+    def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
+    def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
     
     sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's/{registryOrg}/${env.REGISTRY_ORG}/g' ${emailTemplateDir}/jk-email.html"
@@ -140,7 +141,7 @@ def sendEmailNotification() {
     sh "sed -i 's/{buildNumber}/${env.BUILD_NUMBER}/g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's/{buildDuration}/${currentBuild.durationString}/g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's/{buildStatus}/${buildStatus}/g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's/{imgStatusSrc}/${buildStatus}/g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's/{cssBgColor}/${cssBgColor}/g' ${emailTemplateDir}/jk-email.html"
 
     emailext mimeType: 'text/html',
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
