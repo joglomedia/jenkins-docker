@@ -4,9 +4,6 @@ FROM jenkins/jenkins:latest
 LABEL maintainer Edi Septriyanto <eslabs.id@gmail.com> architecture="AMD64/x86_64"
 LABEL jenkins-version="latest" debian-version="stretch" build="25-Jan-2020"
 
-# Tell the container there is no tty
-ENV DEBIAN_FRONTEND noninteractive
-
 USER root
 
 ENV JENKINS_REF /usr/share/jenkins/ref
@@ -28,9 +25,8 @@ RUN apt-get -y update && \
 COPY jenkins-home/plugins.txt ${JENKINS_REF}/
 RUN /usr/local/bin/install-plugins.sh < ${JENKINS_REF}/plugins.txt
 
-#WORKDIR /var/jenkins_home/
-
 COPY jenkins-home/email-templates /var/jenkins_home/
 
 RUN usermod -a -G docker jenkins
 USER jenkins
+
