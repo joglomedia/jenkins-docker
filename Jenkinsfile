@@ -50,7 +50,7 @@ pipeline {
                     //            """
                     //).trim()
                     def JenkinsEntrypoint = "\"/sbin/tini\" \"--\" \"/usr/local/bin/jenkins.sh\""
-                    withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint='${JenkinsEntrypoint}'") { con ->
+                    withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=\"${JenkinsEntrypoint}\"") { con ->
                     //docker.image(env.IMAGE_NAME).withRun("-p 9090:8080 --name=jenkins_docker") { con ->
                         def conID = con.id
                         statusCode = sh(returnStdout: true,
@@ -101,6 +101,11 @@ pipeline {
     }
     post {
         always {
+            script {
+                sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
+                sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
+                sh "docker rmi ${env.IMAGE_NAME}"
+            }
             cleanWs()
         }
     }
