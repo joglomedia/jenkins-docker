@@ -112,13 +112,9 @@ def testBuildImage() {
 }
 
 def cleanupBuildImage() {
-    sh(returnStdout: true,
-        script: '''
-            docker ps -q -f "name=jenkins-docker-test" | xargs --no-run-if-empty docker container stop
-            docker container ls -a -q -f "name=jenkins-docker-test" | xargs -r docker container rm
-            docker rmi "${env.IMAGE_NAME}"
-            '''
-    )
+    sh "docker ps -q -f \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container stop"
+    sh "docker container ls -a -q -f \"name=jenkins-docker-test\" | xargs -r docker container rm"
+    sh "docker rmi ${env.IMAGE_NAME}"
 }
 
 def sendEmailNotification() {
