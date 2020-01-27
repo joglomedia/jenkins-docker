@@ -24,7 +24,7 @@ pipeline {
                     ).trim()
                     env.IMAGE_NAME = "${env.REGISTRY_ORG}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
                     env.GIT_COMMITTER_EMAIL = sh(returnStdout: true,
-                        script: 'git log --oneline --format="%ae" ${env.GIT_COMMIT} | head -1',
+                        script: "git log --oneline --format=\"%ae\" ${env.GIT_COMMIT} | head -1",
                     ).trim()
                     println "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
                 }
@@ -68,13 +68,13 @@ pipeline {
 
             }
         }
-        stage('Cleanup Image') {
+        /*stage('Cleanup Image') {
             steps {
                 script {
                     cleanupBuildImage()
                 }
             }
-        }
+        }*/
     }
     post {
         always {
@@ -95,7 +95,7 @@ def testBuildImage() {
     def containerIP = sh(returnStdout: true,
         script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-test"
     ).trim()
-    echo "Run jenkins-docker-test container listening on http://${containerIP}:49001"
+    echo "Run jenkins-docker-test container listening on http://${containerIP}:8080"
 
     env.STATUS_CODE = sh(returnStdout: true,
         script: """
