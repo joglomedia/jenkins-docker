@@ -59,7 +59,7 @@ pipeline {
                         env.STATUS_CODE = sh(returnStdout: true,
                             script: """
                                     set +x
-                                    curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
+                                    curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:8080
                                     """
                         ).trim()
                     }
@@ -120,7 +120,7 @@ def cleanupBuildImage() {
 
 def sendEmailNotification() {
     emailext mimeType: 'text/html',
-        subject: "Jenkins build ${currentBuild.currentResult}: ${env.JOB_NAME}#${env.BUILD_NUMBER} (${GIT_BRANCH} - ${GIT_COMMIT_HASH}",
+        subject: $PROJECT_DEFAULT_SUBJECT,
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         body: $PROJECT_DEFAULT_CONTENT
 }
