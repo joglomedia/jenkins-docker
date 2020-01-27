@@ -50,7 +50,7 @@ pipeline {
                     //            """
                     //).trim()
                     //docker.withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker") {
-                    docker.image("${env.IMAGE_NAME}").withRun(args: "-p 9090:8080 --name=jenkins_docker") {
+                    docker.image(env.IMAGE_NAME).withRun(args: "-p 9090:8080 --name=jenkins_docker") {
                         statusCode = sh(returnStdout: true,
                             script: """
                                     set +x
