@@ -93,7 +93,7 @@ pipeline {
 
 
 def testBuildImage() {
-    sh "docker container run -d --name=jenkins-docker-test -p 49001 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
+    sh "docker container run -d --name=jenkins-docker-test -p 49001:8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
     sleep(time:10,unit:"SECONDS")
 
     def containerIP = sh(returnStdout: true,
@@ -104,7 +104,7 @@ def testBuildImage() {
     env.STATUS_CODE = sh(returnStdout: true,
         script: """
             set +x
-            curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:49001
+            curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:8080
             """
     ).trim()
     println "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
@@ -118,9 +118,9 @@ def testBuildImage() {
 }
 
 def cleanupBuildImage() {
-    sh "docker ps -qf \"name=jenkins-docker-test\" | xargs -r docker container stop"
-    sh "docker container ls -aqf \"name=jenkins-docker-test\" | xargs -r docker container rm"
-    sh "docker images -q ${env.IMAGE_NAME} | xargs -r docker rmi ${env.IMAGE_NAME}"
+    sh "docker ps -qf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container stop"
+    sh "docker container ls -aqf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container rm"
+    sh "docker images -q ${env.IMAGE_NAME} | xargs --no-run-if-empty docker rmi ${env.IMAGE_NAME}"
 }
 
 def sendEmailNotification() {
