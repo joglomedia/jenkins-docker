@@ -39,7 +39,7 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    def container = buildImage.run("-p 9090:8080 --name=jenkins_docker")
+                    /*def container = buildImage.run("-p 9090:8080 --name=jenkins_docker")
                     def conport = container.port()
                     echo "${buildImage.id} container is running at host:port ${conport}"
                     env.STATUS_CODE = sh(returnStdout: true,
@@ -48,15 +48,17 @@ pipeline {
                                 curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
                                 """
                     ).trim()
-                    /*def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=''") {
+                    */
+                    def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=''") {
                     //docker.image(env.IMAGE_NAME).withRun("-p 9090:8080 --name=jenkins_docker") { con ->
+                        echo "Jenkins container ${container.id} listening on ${container.port}"
                         env.STATUS_CODE = sh(returnStdout: true,
                             script: """
                                     set +x
                                     curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
                                     """
                         ).trim()
-                    }*/
+                    }
                     echo "Get status code ${env.STATUS_CODE} from container ${container.id}"
                 }
             }
@@ -100,6 +102,7 @@ pipeline {
                 cleanupBuildImage()
             }
             cleanWs()
+            sendEmailNotification()
         }
     }
 }
@@ -109,5 +112,11 @@ def cleanupBuildImage() {
     sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
     sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
     //sh "docker rmi ${env.IMAGE_NAME}"
+}
+
+def sendEmailNotification() {
+    emailext body: "${currentBuild.currentResult}: Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}\n More info at: ${env.BUILD_URL}",
+        recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
+        subject: "${currentBuild.currentResult}: Jenkins build job ${env.JOB_NAME}"
 }
 
