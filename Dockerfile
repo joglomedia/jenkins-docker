@@ -29,4 +29,5 @@ RUN /usr/local/bin/install-plugins.sh < ${JENKINS_REF}/plugins.txt
 
 RUN usermod -a -G docker jenkins
 
+COPY jenkins-home/email-templates /var/jenkins_home/
 USER jenkins
