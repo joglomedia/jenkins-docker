@@ -27,7 +27,7 @@ pipeline {
                 script {
                     def image = docker.build("${IMAGE}")
                     if ( image.id != "" ) {
-                        println "Newly built Docker image : " + image.id
+                        println "Docker image " + image.id + " built from commit ${env.GIT_HASH}"
                     } else {
                         println "Failed building Docker image"
                     }
@@ -37,7 +37,7 @@ pipeline {
         stage('Test Docker Image') {
             steps {
                 script {
-                    def container = image.run("-p 9090:8080 --name=jenkins_docker")
+                    def container = image.run('-p 9090:8080 --name=jenkins_docker')
                     def conport = container.port(9090)
                     println image.id + " container is running at host:port " + conport
                     env.STATUS_CODE = sh(
