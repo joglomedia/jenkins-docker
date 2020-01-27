@@ -8,7 +8,8 @@
 pipeline {
     agent any
     environment {
-        IMAGE_REPO = "eslabsid/jenkins-docker"
+        REGISTRY_ORGANIZATION = "eslabsid"
+        REGISTRY_REPO = "jenkins-docker"
         REGISTRY_URL = "https://registry.hub.docker.com/"
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
@@ -22,8 +23,8 @@ pipeline {
                     env.GIT_COMMIT_MESSAGE = sh(returnStdout: true,
                         script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d')' -f1",
                     ).trim()
-                    env.IMAGE_NAME = "${env.IMAGE_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
-                    echo "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
+                    env.IMAGE_NAME = "${env.REGISTRY_ORGANIZATION}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
+                    println "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
                 }
             }
         }
@@ -32,9 +33,9 @@ pipeline {
                 script {
                     def buildImage = docker.build(env.IMAGE_NAME)
                     if ( buildImage.id != "" ) {
-                        echo "Docker image ${buildImage.id} built from commit ${env.GIT_COMMIT_HASH}"
+                        println "Docker image ${buildImage.id} built from commit ${env.GIT_COMMIT_HASH}"
                     } else {
-                        echo "Failed building Docker image ${env.IMAGE_NAME}"
+                        println "Failed building Docker image ${env.IMAGE_NAME}"
                     }
                 }
             }
@@ -42,25 +43,8 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    def container = buildImage.run("-p 9090:8080 --name=jenkins_docker")
-                    def conport = container.port()
-                    echo "${buildImage.id} container is running at host:port ${conport}"
-                    env.STATUS_CODE = sh(returnStdout: true,
-                        script: """
-                                set +x
-                                curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
-                                """
-                    ).trim()
-                    /*def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=''") {
-                        sleep(time:10,unit:"SECONDS")
-                        env.STATUS_CODE = sh(returnStdout: true,
-                            script: """
-                                    set +x
-                                    curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:8080
-                                    """
-                        ).trim()
-                    }*/
-                    echo "Get status code ${env.STATUS_CODE} from container ${container.id}"
+                    env.STATUS_CODE = testBuildImage()
+                    println "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
                 }
             }
         }
@@ -70,7 +54,7 @@ pipeline {
                     if ( env.STATUS_CODE == "200" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry(env.REGISTRY_URL, env.REGISTRY_CREDENTIAL) {
-                            echo "Push image ${env.IMAGE_NAME} to registry ${env.REGISTRY_URL}"
+                            println "Push image ${env.IMAGE_NAME} to registry ${env.REGISTRY_URL}"
                             buildImage.push()
                             //if ( env.BRANCH_NAME == "master" ) {
                             //    println "Push image ${env.IMAGE_NAME}:master to registry ${env.REGISTRY_URL}"
@@ -82,7 +66,7 @@ pipeline {
                         }
                         currentBuild.result = "SUCCESS"
                     } else {
-                        echo "Humans are mortals."
+                        println "Humans are mortals."
                         currentBuild.result = "FAILURE"
                     }
                 }
@@ -100,24 +84,39 @@ pipeline {
     post {
         always {
             script {
+                sendEmailNotification()
                 cleanupBuildImage()
             }
             cleanWs()
-            sendEmailNotification()
         }
     }
 }
 
 
+def testBuildImage() {
+    sh "docker container run -d --name=jenkins-docker-test -p 8080:9090 ${env.IMAGE_NAME}"
+    sleep(time:10,unit:"SECONDS")
+    def containerIP = sh(returnStdout: true,
+        script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-builder"
+    ).trim()
+    def status_code = sh(returnStdout: true,
+        script: """
+            set +x
+            curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:9090
+            """
+    ).trim()
+    return status_code
+}
+
 def cleanupBuildImage() {
-    sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
-    sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
-    //sh "docker rmi ${env.IMAGE_NAME}"
+    sh "docker ps -q -f \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container stop"
+    sh "docker container ls -a -q -f \"name=jenkins-docker-test\" | xargs -r docker container rm"
+    sh "docker rmi ${env.IMAGE_NAME}"
 }
 
 def sendEmailNotification() {
     emailext mimeType: 'text/html',
-        subject: "Jenkins build ${currentBuild.currentResult}: ${env.JOB_NAME}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
+        subject: "Jenkins build ${currentBuild.currentResult}: ${env.JOB_BASE_NAME}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         body: '${SCRIPT, template="jk-email-html.template"}'
 }
