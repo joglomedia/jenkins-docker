@@ -12,7 +12,7 @@ pipeline {
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
     stages {
-        stage('Verify Repo') {
+        stage('Verify Git Repo') {
             steps {
                 script {
                     env.GIT_HASH = sh(
@@ -22,7 +22,7 @@ pipeline {
                 }
             }
         }
-        stage('Build Image') {
+        stage('Build Docker Image') {
             steps {
                 script {
                     def image = docker.build("${IMAGE}")
@@ -34,7 +34,7 @@ pipeline {
                 }
             }
         }
-        stage('Test Image') {
+        stage('Test Docker Image') {
             steps {
                 script {
                     def container = image.run("-p 9090:8080 --name=jenkins_docker")
@@ -50,10 +50,7 @@ pipeline {
                 }
             }
         }
-        stage('Push Image') {
-            /* Finally, we'll push the image
-             *
-             */
+        stage('Push Image to Registry') {
             steps {
                 script {
                     if ( "${env.STATUS_CODE}" == "200" ) {
@@ -76,14 +73,18 @@ pipeline {
 
             }
         }
+        stage('Clean up Image') {
+            steps {
+                script {
+                    sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
+                    sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
+                    sh "docker rmi ${env.IMAGE}"
+                }
+            }
+        }
     }
     post {
         always {
-            script {
-                sh "docker ps -q -f \"name=jenkins_docker\" | xargs --no-run-if-empty docker container stop"
-                sh "docker container ls -a -q -f \"name=jenkins_docker\" | xargs -r docker container rm"
-                sh "docker rmi ${env.IMAGE}"
-            }
             cleanWs()
         }
     }
