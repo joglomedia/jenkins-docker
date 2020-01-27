@@ -20,6 +20,7 @@ pipeline {
                         script: "git show --oneline | head -1 | cut -d' ' -f1",
                     ).trim()
                     env.IMAGE_NAME = "${env.IMAGE_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_HASH)
+                    echo "Commit ${env.GIT_HASH} checked out from ${env.BRANCH_NAME} branch"
                 }
             }
         }
@@ -47,11 +48,12 @@ pipeline {
                     //            curl -w "%{http_code}" -o /dev/null -s http://\"${contport}\"
                     //            '''
                     //).trim()
-                    docker.withDockerContainer(env.IMAGE_NAME, "-p 9090:8080 --name=jenkins_docker") {
+                    //docker.withDockerContainer(env.IMAGE_NAME) {
+                    docker.image(env.IMAGE_NAME).inside("-p 9090:8080") {
                         env.STATUS_CODE = sh(returnStdout: true,
                             script: """
                                     set +x
-                                    curl -w \"%{http_code}\" -o /dev/null -s http://0.0.0.0:9090
+                                    curl -w \"%{http_code}\" -o /dev/null -s http://0.0.0.0:8080
                                     """
                         ).trim()
                     }
