@@ -39,33 +39,32 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    def statusCode = "000"
-                    //def buildContainer = buildImage.run("-p 8080 --name=jenkins_docker")
-                    //def conport = buildContainer.port()
-                    //echo "${buildImage.id} container is running at host:port ${conport}"
-                    //env.STATUS_CODE = sh(returnStdout: true,
-                    //    script: """
-                    //            set +x
-                    //            curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
-                    //            """
-                    //).trim()
-                    def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=''") {
+                    def container = buildImage.run("-p 9090:8080 --name=jenkins_docker")
+                    def conport = container.port()
+                    echo "${buildImage.id} container is running at host:port ${conport}"
+                    env.STATUS_CODE = sh(returnStdout: true,
+                        script: """
+                                set +x
+                                curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
+                                """
+                    ).trim()
+                    /*def container = withDockerContainer(image: "${env.IMAGE_NAME}", args: "-p 9090:8080 --name=jenkins_docker --entrypoint=''") {
                     //docker.image(env.IMAGE_NAME).withRun("-p 9090:8080 --name=jenkins_docker") { con ->
-                        statusCode = sh(returnStdout: true,
+                        env.STATUS_CODE = sh(returnStdout: true,
                             script: """
                                     set +x
-                                    curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:8080
+                                    curl -s -w \"%{http_code}\" -o /dev/null http://0.0.0.0:9090
                                     """
                         ).trim()
-                    }
-                    echo "Get status code ${statusCode} from container ${container.id}"
+                    }*/
+                    echo "Get status code ${env.STATUS_CODE} from container ${container.id}"
                 }
             }
         }
         stage('Register Image') {
             steps {
                 script {
-                    if ( statusCode == "200" ) {
+                    if ( env.STATUS_CODE != "000" ) {
                         println "Jenkins-docker is alive and kicking!"
                         docker.withRegistry(env.REGISTRY_URL, env.REGISTRY_CREDENTIAL) {
                             echo "Push image ${env.IMAGE_NAME} to registry ${env.REGISTRY_URL}"
