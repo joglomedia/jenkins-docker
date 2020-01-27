@@ -128,7 +128,7 @@ def sendEmailNotification() {
     def rgitUrl = "${env.GIT_URL}"
     def gitUrl = rgitUrl.replace(".get", "")
     def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
-    def gitCommitterAvatar = sh(returnStdout: true, script: '''md5sum <<<"${env.GIT_COMMITTER_EMAIL}"''')
+    def gitCommitterAvatar = sh("md5sum <<<${env.GIT_COMMITTER_EMAIL}")
     def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
     def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
     
