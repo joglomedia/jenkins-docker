@@ -127,8 +127,8 @@ def cleanupBuildImage() {
 def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
-    def gitUrl = ${env.GIT_URL}
-    def gitUrl = gitUrl.replace(".get", "")
+    def rgitUrl = ${env.GIT_URL}
+    def gitUrl = rgitUrl.replace(".get", "")
     def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
     def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
     
