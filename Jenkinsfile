@@ -31,7 +31,7 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    def buildImage = docker.build(env.IMAGE_NAME)
+                    def buildImage = docker.build(env.IMAGE_NAME, '--rm')
                     if ( buildImage.id != "" ) {
                         println "Docker image ${buildImage.id} built from commit ${env.GIT_COMMIT_HASH}"
                     } else {
@@ -121,7 +121,7 @@ def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
 
-    sh "cp ${emailTemplatePath} email-templates/jk-email.html"
+    sh "cp ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
     sh "sed -i \"s/\${registryOrg}/${env.REGISTRY_ORG}/g\" ${emailTemplatePath}"
     sh "sed -i \"s/\${registryRepo}/${env.REGISTRY_REPO}/g\" ${emailTemplatePath}"
     sh "sed -i \"s/\${gitUrl}/${env.GIT_URL}/g\" ${emailTemplatePath}"
