@@ -9,7 +9,7 @@ pipeline {
     environment {
         REGISTRY_ORG = "eslabsid"
         REGISTRY_REPO = "jenkins-docker"
-        REGISTRY_URL = "https://index.docker.io/v1/"
+        REGISTRY_URL = "https://registry.hub.docker.com" // https://index.docker.io/v1/
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
     stages {
@@ -81,7 +81,7 @@ pipeline {
         always {
             script {
                 cleanupBuildImage()
-                //sendEmailNotification()
+                sendEmailNotification()
             }
             cleanWs()
         }
@@ -93,11 +93,13 @@ def testBuildImage() {
     sh "docker container run -d --name=jenkins-docker-test -p 49001:8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
     sleep(time:10,unit:"SECONDS")
 
+    // Check Jenkins container IP
     def containerIP = sh(returnStdout: true,
         script: "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' jenkins-docker-test"
     ).trim()
     echo "Run jenkins-docker-test container listening on http://${containerIP}:8080"
 
+    // Check Jenkins response
     env.STATUS_CODE = sh(returnStdout: true,
         script: """
             set +x
@@ -107,6 +109,7 @@ def testBuildImage() {
     println "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
 
     /*
+    // Check Jenkins initial admin password
     env.JENKINS_PASS = sh(returnStdout: true,
         script: "docker exec -i jenkins-docker-test cat /var/jenkins_home/secrets/initialAdminPassword"
     ).trim()
@@ -117,7 +120,9 @@ def testBuildImage() {
 }
 
 def cleanupBuildImage() {
+    // Just wait for a while
     sleep(time:10,unit:"SECONDS")
+
     sh "docker ps -qf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container stop"
     sh "docker container ls -aqf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container rm"
     sh "docker images -q ${env.IMAGE_NAME} | xargs --no-run-if-empty docker rmi"
@@ -131,8 +136,9 @@ def sendEmailNotification() {
     def gitUrl = rgitUrl.replace(".get", "")
     def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
     def gitCommitterAvatar = sh(returnStdout: true,
-        script: """
-            md5sum <<<${env.GIT_COMMITTER_EMAIL}
+        script:
+            """
+            echo ${env.GIT_COMMITTER_EMAIL} | md5sum 
             """
     ).trim()
     def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
