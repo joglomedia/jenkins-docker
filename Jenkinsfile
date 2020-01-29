@@ -163,7 +163,7 @@ def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
     def rgitUrl = "${env.GIT_URL}"
-    def gitUrl = rgitUrl.replace("\.get", "")
+    def gitUrl = rgitUrl.replace(/.get/, '')
     def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
     def gitCommitterAvatar = sh(returnStdout: true,
         script:
