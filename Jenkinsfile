@@ -163,7 +163,7 @@ def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
     def rgitUrl = "${env.GIT_URL}"
-    def gitUrl = rgitUrl.replace(/.get/, '')
+    def gitUrl = rgitUrl.replace(/.git/, '')
     def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
     def gitCommitterAvatar = sh(returnStdout: true,
         script:
@@ -196,7 +196,7 @@ def sendEmailNotification() {
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         //body: '${SCRIPT, template="groovy-html.template"}'
-        body: '${FILE, path="jk-email.html"}'
+        body: ${FILE, path="jk-email.html"}
 
     // Just wait for email sent
     sleep(time: 10, unit: 'SECONDS')
