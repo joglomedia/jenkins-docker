@@ -165,31 +165,28 @@ def sendEmailNotification() {
         """
     ).trim()
 
-    /*
-    def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
-    def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : (currentBuild.currentResult == 'FAILURE') ? '#32d282' : '#c6d433')
-    */
+    // Email decoration
     def buildStatus
     def cssColorStatus
     def cssColorRgba
-
     if (currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') {
         // success
-        buildStatus = "passed"
+        buildStatus = "success"
         cssColorStatus = "#32d282"
         cssColorRgba = "50,210,130,0.1"
     } else if (currentBuild.currentResult == 'FAILURE') {
         // failure
-        buildStatus = "failed"
+        buildStatus = "failure"
         cssColorStatus = "#db4545"
         cssColorRgba = "219,69,69,0.1"
     } else {
         // unknown
-        buildStatus = "warn"
+        buildStatus = "broken"
         cssColorStatus = "#c6d433"
         cssColorRgba = "198,212,51,0.1"
     }
-    
+
+    // Still looking for better email template method
     sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{registryOrg}|${env.REGISTRY_ORG}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{registryRepo}|${env.REGISTRY_REPO}|g' ${emailTemplateDir}/jk-email.html"
@@ -216,6 +213,6 @@ def sendEmailNotification() {
         body: '${SCRIPT, template="jk-email.html"}'
 
     // Just wait for email sent
-    sleep(time: 10, unit: 'SECONDS')
+    sleep(time: 5, unit: 'SECONDS')
     sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
