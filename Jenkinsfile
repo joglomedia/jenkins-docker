@@ -12,8 +12,8 @@ pipeline {
         REGISTRY_URL = "https://registry.hub.docker.com" // https://index.docker.io/v1/
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
-    def myImage
     stages {
+        def myImage
         stage('Init') {
             steps {
                 script {
