@@ -153,68 +153,69 @@ def cleanupCustomImage() {
 }
 
 def sendEmailNotification() {
-    script {
-        def emailTemplateDir = "/var/jenkins_home/email-templates"
-        def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
-        def rgitUrl = "${env.GIT_URL}"
-        def gitUrl = rgitUrl.replace(/.git/, '')
-        def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
-        def gitCommitterAvatar = sh(returnStdout: true,
-            script:
-                """
-                echo ${env.GIT_COMMITTER_EMAIL} | md5sum | cut -d' ' -f1
-                """
-        ).trim()
+    def emailTemplateDir = "/var/jenkins_home/email-templates"
+    def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
+    def rgitUrl = "${env.GIT_URL}"
+    def gitUrl = rgitUrl.replace(/.git/, '')
+    def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
+    def gitCommitterAvatar = sh(returnStdout: true,
+        script:
+        """
+        echo ${env.GIT_COMMITTER_EMAIL} | md5sum | cut -d' ' -f1
+        """
+    ).trim()
 
-        /*
-        def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
-        def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : (currentBuild.currentResult == 'FAILURE') ? '#32d282' : '#c6d433')
-        */
+    /*
+    def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
+    def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : (currentBuild.currentResult == 'FAILURE') ? '#32d282' : '#c6d433')
+    */
+    def buildStatus
+    def cssColorStatus
+    def cssColorRgba
 
-        if (currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') {
-            // success
-            def buildStatus = "passed"
-            def cssColorStatus = "#32d282"
-            def cssColorRgba = "50,210,130,0.1"
-        } else if (currentBuild.currentResult == 'FAILURE') {
-            // failure
-            def buildStatus = "failed"
-            def cssColorStatus = "#db4545"
-            def cssColorRgba = "219,69,69,0.1"
-        } else {
-            // unknown
-            def buildStatus = "warn"
-            def cssColorStatus = "#c6d433"
-            def cssColorRgba = "198,212,51,0.1"
-        }
-        
-        sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{registryOrg}|${env.REGISTRY_ORG}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{registryRepo}|${env.REGISTRY_REPO}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{gitUrl}|${gitUrl}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{gitBranch}|${env.BRANCH_NAME}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{gitCommitHash}|${env.GIT_COMMIT_HASH}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{gitCommitMsg}|${env.GIT_COMMIT_MESSAGE}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{gitCommitterName}|${env.GIT_COMMITTER_NAME}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{gitCommitterAvatar}|${gitCommitterAvatar}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{gitCommitUrl}|${env.CHANGE_URL}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{gitCommitterEmail}|${env.CHANGE_AUTHOR_EMAIL}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{jobName}|${env.JOB_NAME}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{buildDuration}|${currentBuild.durationString}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{buildUrl}|${env.BUILD_URL}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{buildStatus}|${buildStatus}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{cssColorStatus}|${cssColorStatus}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{cssColorRgba}|${cssColorRgba}|g' ${emailTemplateDir}/jk-email.html"
-
-        emailext mimeType: 'text/html',
-            subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
-            recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
-            //body: '${SCRIPT, template="groovy-html.template"}'
-            body: '${SCRIPT, template="jk-email.html"}'
-
-        // Just wait for email sent
-        sleep(time: 10, unit: 'SECONDS')
-        sh "rm -f ${emailTemplateDir}/jk-email.html"
+    if (currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') {
+        // success
+        buildStatus = "passed"
+        cssColorStatus = "#32d282"
+        cssColorRgba = "50,210,130,0.1"
+    } else if (currentBuild.currentResult == 'FAILURE') {
+        // failure
+        buildStatus = "failed"
+        cssColorStatus = "#db4545"
+        cssColorRgba = "219,69,69,0.1"
+    } else {
+        // unknown
+        buildStatus = "warn"
+        cssColorStatus = "#c6d433"
+        cssColorRgba = "198,212,51,0.1"
     }
+    
+    sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{registryOrg}|${env.REGISTRY_ORG}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{registryRepo}|${env.REGISTRY_REPO}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitUrl}|${gitUrl}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitBranch}|${env.BRANCH_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitHash}|${env.GIT_COMMIT_HASH}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitMsg}|${env.GIT_COMMIT_MESSAGE}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitterName}|${env.GIT_COMMITTER_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitterAvatar}|${gitCommitterAvatar}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitUrl}|${env.CHANGE_URL}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitterEmail}|${env.CHANGE_AUTHOR_EMAIL}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{jobName}|${env.JOB_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{buildDuration}|${currentBuild.durationString}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{buildUrl}|${env.BUILD_URL}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{buildStatus}|${buildStatus}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{cssColorStatus}|${cssColorStatus}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{cssColorRgba}|${cssColorRgba}|g' ${emailTemplateDir}/jk-email.html"
+
+    emailext mimeType: 'text/html',
+        subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
+        recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
+        //body: '${SCRIPT, template="groovy-html.template"}'
+        body: '${SCRIPT, template="jk-email.html"}'
+
+    // Just wait for email sent
+    sleep(time: 10, unit: 'SECONDS')
+    sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
