@@ -5,7 +5,7 @@
  *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
 
-pipelines {
+pipeline {
     agent any
 
     environment {
