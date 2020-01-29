@@ -64,16 +64,16 @@ pipeline {
                     app.inside {
                         sleep(time: 60, unit: 'SECONDS')
 
-                        def statusCode = sh(returnStdout: true,
-                            script: "curl -s -w \"%{http_code}\" -o /dev/null http://localhost:8080"
-                        ).trim()
+                        //def statusCode = sh(returnStdout: true,
+                         //   script: "curl -s -w \"%{http_code}\" -o /dev/null http://localhost:8080"
+                        //).trim()
                         def jenkinsAdminPass = sh(
                                 returnStdout: true, 
                                 script: "cat /var/jenkins_home/secrets/initialAdminPassword"
                         ).trim()
                     }
 
-                    env.STATUS_CODE = "${statusCode}"
+                    //env.STATUS_CODE = "${statusCode}"
                     env.JENKINS_PASS = "${jenkinsAdminPass}"
                 }
                 echo "Get status code ${statusCode} from custom image container"
@@ -192,11 +192,11 @@ def sendEmailNotification() {
     def gitCommitterAvatar = sh(returnStdout: true,
         script:
         """
-        printf ${env.GIT_COMMITTER_EMAIL} | md5sum | cut -d' ' -f1
+        printf \"${env.GIT_COMMITTER_EMAIL}\" | md5sum | cut -d' ' -f1
         """
     ).trim()
 
-    def buildURL = (blueOcean ? "${env.RUN_DISPLAY_URL}" : "${env.BUILD_URL}")
+    def buildURL = ((env.RUN_DISPLAY_URL) ? "${env.RUN_DISPLAY_URL}" : "${env.BUILD_URL}")
 
     // Email decoration
     def buildStatus
