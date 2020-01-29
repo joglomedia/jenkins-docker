@@ -47,7 +47,7 @@ docker exec -it jenkins-docker cat /var/jenkins_home/secrets/initialAdminPasswor
 
 ## Install additional plugins
 
-All additional plugins listed in ``jenkins-home/plugins.txt`` file.
+All additional plugins listed in [jenkins-home/plugins.txt](https://github.com/eslabsid/jenkins-docker/blob/master/jenkins-home/plugins.txt) file.
 
 ## Inspirations
 [Jenkins and Docker](https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry)
