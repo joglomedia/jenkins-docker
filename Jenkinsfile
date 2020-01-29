@@ -54,7 +54,7 @@ pipeline {
             steps {
                 script {
                     def contArgs = "--name=jenkins-docker-test -p 49001:8080 -v /var/run/docker.sock:/var/run/docker.sock"
-                    env.STATUS_CODE = runCustomImage("${env.IMAGE_NAME}", "${contArgs}")
+                    runCustomImage("${env.IMAGE_NAME}", "${contArgs}")
                     env.JENKINS_PASS = getInitialAdminPassword()
                 }
                 echo "Get status code ${env.STATUS_CODE} from custom image container"
@@ -118,15 +118,15 @@ def runCustomImage(imageName, args) {
     ).trim()
 
     // Get Jenkins status code
-    def statusCode = sh(returnStdout: true,
+    env.STATUS_CODE = sh(returnStdout: true,
         script: '''
             set +x
             curl -s -w "%{http_code}" -o /dev/null http://localhost:${containerPort}
             '''
     ).trim()
 
-    //echo "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
-    return statusCode
+    echo "Get status code ${env.STATUS_CODE} from Jenkins http://localhost:${containerPort}"
+    //return statusCode
 }
 
 // Check Jenkins initial admin password
@@ -173,19 +173,19 @@ def sendEmailNotification() {
 
         if (currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') {
             // success
-            def buildStatus = 'passed'
-            def cssColorStatus = '#32d282'
-            def cssColorRgba = '50,210,130,0.1'
+            def buildStatus = "passed"
+            def cssColorStatus = "#32d282"
+            def cssColorRgba = "50,210,130,0.1"
         } else if (currentBuild.currentResult == 'FAILURE') {
             // failure
-            def buildStatus = 'failed'
-            def cssColorStatus = '#db4545'
-            def cssColorRgba = '219,69,69,0.1'
+            def buildStatus = "failed"
+            def cssColorStatus = "#db4545"
+            def cssColorRgba = "219,69,69,0.1"
         } else {
             // unknown
-            def buildStatus = 'warn'
-            def cssColorStatus = '#c6d433'
-            def cssColorRgba = '198,212,51,0.1'
+            def buildStatus = "warn"
+            def cssColorStatus = "#c6d433"
+            def cssColorRgba = "198,212,51,0.1"
         }
         
         sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
@@ -200,9 +200,9 @@ def sendEmailNotification() {
         sh "sed -i 's|{gitCommitUrl}|${env.CHANGE_URL}|g' ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{gitCommitterEmail}|${env.CHANGE_AUTHOR_EMAIL}|g' ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{jobName}|${env.JOB_NAME}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{buildUrl}|${env.BUILD_URL}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{buildDuration}|${currentBuild.durationString}|g' ${emailTemplateDir}/jk-email.html"
+        sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
+        sh "sed -i 's|{buildUrl}|${env.BUILD_URL}|g' ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{buildStatus}|${buildStatus}|g' ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{cssColorStatus}|${cssColorStatus}|g' ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{cssColorRgba}|${cssColorRgba}|g' ${emailTemplateDir}/jk-email.html"
