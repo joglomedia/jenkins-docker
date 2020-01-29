@@ -59,21 +59,14 @@ pipeline {
         }
 
         stage('Test Image') {
-            def statusCode
-            def jenkinsAdminPass
-
             steps {
                 app.inside {
                     sleep(time: 60, unit: 'SECONDS')
 
-                    statusCode = sh(returnStdout: true,
+                    def statusCode = sh(returnStdout: true,
                         script: "curl -s -w \"%{http_code}\" -o /dev/null http://localhost:8080"
                     ).trim()
-                    jenkinsAdminPass = sh(
-                            returnStdout: true, 
-                            script: "cat /var/jenkins_home/secrets/initialAdminPassword"
-                    ).trim()
-                    def status = sh(
+                    def jenkinsAdminPass = sh(
                             returnStdout: true, 
                             script: "cat /var/jenkins_home/secrets/initialAdminPassword"
                     ).trim()
