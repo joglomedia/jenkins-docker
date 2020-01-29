@@ -53,7 +53,8 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    env.STATUS_CODE = runCustomImage(customImage)
+                    def contArgs = "--name=jenkins-docker-test -p 49001:8080 -v /var/run/docker.sock:/var/run/docker.sock"
+                    env.STATUS_CODE = runCustomImage("${env.IMAGE_NAME}", "${contArgs}")
                     env.JENKINS_PASS = getInitialAdminPassword()
                 }
                 echo "Get status code ${env.STATUS_CODE} from custom image container"
