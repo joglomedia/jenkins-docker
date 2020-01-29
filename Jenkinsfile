@@ -5,7 +5,7 @@
  *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
 
-pipeline {
+node {
     agent any
 
     environment {
@@ -15,9 +15,9 @@ pipeline {
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
 
-    stages {
-        def app
+    def app
 
+    stages {
         stage('Init') {
             steps {
                 script {
