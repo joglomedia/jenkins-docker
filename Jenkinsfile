@@ -12,6 +12,7 @@ pipeline {
         REGISTRY_URL = "https://registry.hub.docker.com" // https://index.docker.io/v1/
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
+    def myImage
     stages {
         stage('Init') {
             steps {
@@ -19,25 +20,32 @@ pipeline {
                     env.GIT_COMMIT_HASH = sh(returnStdout: true,
                         script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d' ' -f1",
                     ).trim()
+
                     env.GIT_COMMIT_MESSAGE = sh(returnStdout: true,
                         script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d')' -f1",
                     ).trim()
-                    env.IMAGE_NAME = "${env.REGISTRY_ORG}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
+
                     env.GIT_COMMITTER_EMAIL = sh(returnStdout: true,
                         script: "git log --oneline --format=\"%ae\" ${env.GIT_COMMIT} | head -1",
                     ).trim()
-                    println "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
+
+                    env.GIT_COMMITTER_NAME = sh(returnStdout: true,
+                        script: "git log --oneline --format=\"%an\" ${env.GIT_COMMIT} | head -1",
+                    ).trim()
+
+                    env.IMAGE_NAME = "${env.REGISTRY_ORG}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
                 }
+                echo "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
             }
         }
         stage('Build Image') {
             steps {
                 script {
-                    def buildImage = docker.build(env.IMAGE_NAME)
-                    if ( buildImage.id != "" ) {
-                        println "Docker image ${buildImage.id} built from commit ${env.GIT_COMMIT_HASH}"
+                    myImage = docker.build(env.IMAGE_NAME)
+                    if ( myImage.id != "" ) {
+                        echo "Docker image ${myImage.id} built from commit ${env.GIT_COMMIT_HASH}"
                     } else {
-                        println "Failed building Docker image ${env.IMAGE_NAME}"
+                        echo "Failed building Docker image ${env.IMAGE_NAME}"
                     }
                 }
             }
@@ -45,24 +53,28 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    testBuildImage()
+                    env.STATUS_CODE = testCustomImage(myImage)
                 }
+                echo "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
             }
         }
         stage('Register Image') {
             steps {
                 script {
                     if ( env.STATUS_CODE != "000" || env.JENKINS_PASS != "" ) {
-                        println "Jenkins-docker is alive and kicking!"
-                        withDockerRegistry(credentialsId: "${env.REGISTRY_CREDENTIAL}", url: "") {
-                            println "Push image ${env.IMAGE_NAME} to DockerHub registry"
-                            //buildImage.push()
+                        echo "Jenkins-docker is alive and kicking!"
+                        /*withDockerRegistry(credentialsId: "${env.REGISTRY_CREDENTIAL}", url: "") {
+                            echo "Push image ${env.IMAGE_NAME} to DockerHub registry"
                             sh "docker push ${env.IMAGE_NAME}"
                             sh "docker logout"
+                        }*/
+                        docker.withRegistry(url: env.REGISTRY_URL, credentialsId: env.REGISTRY_CREDENTIAL) {
+                            myImage.push()
+                            echo "Image ${env.IMAGE_NAME} pushed to Docker registry"
                         }
                         currentBuild.result = "SUCCESS"
                     } else {
-                        println "Humans are mortals."
+                        echo "Humans are mortals."
                         currentBuild.result = "FAILURE"
                     }
                 }
@@ -89,9 +101,27 @@ pipeline {
 }
 
 
+def testCustomImage(image) {
+    def status_code
+    image.inside {
+        // Give container a time for kicking up Jenkins
+        sleep(time: 30, unit: 'SECONDS')
+
+        // Check Jenkins response
+        status_code = sh(returnStdout: true,
+            script: '''
+                set +x
+                curl -s -w "%{http_code}" -o /dev/null http://localhost:8080
+                '''
+        ).trim()
+    }
+    //echo "Get status code ${status_code} from container jenkins-docker-test"
+    return status_code
+}
+
 def testBuildImage() {
     sh "docker container run -d --name=jenkins-docker-test -p 49001:8080 -v /var/run/docker.sock:/var/run/docker.sock ${env.IMAGE_NAME}"
-    sleep(time:10,unit:"SECONDS")
+    sleep(time: 10, unit: 'SECONDS')
 
     // Check Jenkins container IP
     def containerIP = sh(returnStdout: true,
@@ -101,12 +131,12 @@ def testBuildImage() {
 
     // Check Jenkins response
     env.STATUS_CODE = sh(returnStdout: true,
-        script: """
+        script: '''
             set +x
-            curl -s -w \"%{http_code}\" -o /dev/null http://${containerIP}:8080
-            """
+            curl -s -w "%{http_code}" -o /dev/null http://${containerIP}:8080
+            '''
     ).trim()
-    println "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
+    echo "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
 
     /*
     // Check Jenkins initial admin password
@@ -114,35 +144,35 @@ def testBuildImage() {
         script: "docker exec -i jenkins-docker-test cat /var/jenkins_home/secrets/initialAdminPassword"
     ).trim()
     if ( env.JENKINS_PASS != "" ) {
-        println "Get initial admin password ${env.JENKINS_PASS} from container jenkins-docker-test"
+        echo "Get initial admin password ${env.JENKINS_PASS} from container jenkins-docker-test"
     }
     */
 }
 
 def cleanupBuildImage() {
     // Just wait for a while
-    sleep(time:10,unit:"SECONDS")
+    sleep(time: 10, unit: 'SECONDS')
 
-    sh "docker ps -qf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container stop"
-    sh "docker container ls -aqf \"name=jenkins-docker-test\" | xargs --no-run-if-empty docker container rm"
-    sh "docker images -q ${env.IMAGE_NAME} | xargs --no-run-if-empty docker rmi"
-    sh "docker system prune --force"
+    sh 'docker ps -qf "name=jenkins-docker-test" | xargs -r docker container stop'
+    sh 'docker container ls -aqf "name=jenkins-docker-test" | xargs -r docker container rm'
+    sh 'docker images -q ${env.IMAGE_NAME} | xargs -r docker rmi'
+    sh 'docker system prune --force'
 }
 
 def sendEmailNotification() {
     def emailTemplateDir = "/var/jenkins_home/email-templates"
     def emailTemplatePath = "${emailTemplateDir}/jk-email-template.html"
     def rgitUrl = "${env.GIT_URL}"
-    def gitUrl = rgitUrl.replace(".get", "")
+    def gitUrl = rgitUrl.replace("\.get", "")
     def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
     def gitCommitterAvatar = sh(returnStdout: true,
         script:
             """
-            echo ${env.GIT_COMMITTER_EMAIL} | md5sum 
+            echo ${env.GIT_COMMITTER_EMAIL} | md5sum | cut -d' ' -f1
             """
     ).trim()
     def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
-    def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : '#32d282')
+    def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : (currentBuild.currentResult == 'FAILURE') ? '#32d282' : '#c6d433')
     
     sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{registryOrg}|${env.REGISTRY_ORG}|g' ${emailTemplateDir}/jk-email.html"
@@ -153,7 +183,8 @@ def sendEmailNotification() {
     sh "sed -i 's|{gitCommitMsg}|${env.GIT_COMMIT_MESSAGE}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{gitCommitterName}|${env.GIT_COMMITTER_NAME}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{gitCommitterAvatar}|${gitCommitterAvatar}|g' ${emailTemplateDir}/jk-email.html"
-    sh "sed -i 's|{jobBaseName}|${env.JOB_BASE_NAME}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitUrl}|${env.CHANGE_URL}|g' ${emailTemplateDir}/jk-email.html"
+    sh "sed -i 's|{gitCommitterEmail}|${env.CHANGE_AUTHOR_EMAIL}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{jobName}|${env.JOB_NAME}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{buildUrl}|${env.BUILD_URL}|g' ${emailTemplateDir}/jk-email.html"
     sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
@@ -165,7 +196,9 @@ def sendEmailNotification() {
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         //body: '${SCRIPT, template="groovy-html.template"}'
-        body: '${FILE, path="jk-email.html"}'
+        body: '${FILE, path="${emailTemplateDir}/jk-email.html"}'
 
+    // Just wait for email sent
+    sleep(time: 10, unit: 'SECONDS')
     sh "rm -f ${emailTemplateDir}/jk-email.html"
 }
