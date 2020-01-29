@@ -21,10 +21,9 @@ pipeline {
         stage('Init') {
             steps {
                 script {
-                    //env.GIT_COMMIT_HASH = sh(returnStdout: true,
-                    //    script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d' ' -f1",
-                    //).trim()
-                    env.GIT_COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse HEAD')
+                    env.GIT_COMMIT_HASH = sh(returnStdout: true,
+                        script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d' ' -f1",
+                    ).trim()
 
                     env.GIT_COMMIT_MESSAGE = sh(returnStdout: true,
                         script: "git log --oneline -1 ${env.GIT_COMMIT} | head -1 | cut -d')' -f1",
@@ -62,7 +61,7 @@ pipeline {
             steps {
                 script {
                     app.inside {
-                        sleep(time: 60, unit: 'SECONDS')
+                        sleep(time: 30, unit: 'SECONDS')
 
                         //def statusCode = sh(returnStdout: true,
                          //   script: "curl -s -w \"%{http_code}\" -o /dev/null http://localhost:8080"
