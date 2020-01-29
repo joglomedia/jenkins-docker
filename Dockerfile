@@ -21,7 +21,12 @@ RUN apt-get -y update && \
     apt-get -y update && \
     apt-get -y install docker-ce
 
-# Install Jenkins plugins
+# Skip the setup wizard
+# ENV JAVA_ARGS -Djenkins.install.runSetupWizard=false -Dpermissive-script-security.enabled=true
+# ENV JAVA_ARGS -Djenkins.install.runSetupWizard=false
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false -Dpermissive-script-security.enabled=true"
+
+# Install the plugins
 COPY jenkins-home/plugins.txt ${JENKINS_REF}/
 RUN /usr/local/bin/install-plugins.sh < ${JENKINS_REF}/plugins.txt
 
@@ -29,4 +34,3 @@ COPY jenkins-home/email-templates /var/jenkins_home/
 
 RUN usermod -a -G docker jenkins
 USER jenkins
-
