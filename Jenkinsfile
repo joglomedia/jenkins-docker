@@ -4,7 +4,7 @@
  *  https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry
  *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
-def myImage
+def customImage
 pipeline {
     agent any
     environment {
@@ -41,9 +41,9 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    myImage = docker.build(env.IMAGE_NAME)
-                    if ( myImage.id != "" ) {
-                        echo "Docker image ${myImage.id} built from commit ${env.GIT_COMMIT_HASH}"
+                    customImage = docker.build(env.IMAGE_NAME)
+                    if ( customImage.id != "" ) {
+                        echo "Docker image ${customImage.id} built from commit ${env.GIT_COMMIT_HASH}"
                     } else {
                         echo "Failed building Docker image ${env.IMAGE_NAME}"
                     }
@@ -53,7 +53,7 @@ pipeline {
         stage('Test Image') {
             steps {
                 script {
-                    env.STATUS_CODE = testCustomImage(myImage)
+                    env.STATUS_CODE = testCustomImage(customImage)
                 }
                 echo "Get status code ${env.STATUS_CODE} from container jenkins-docker-test"
             }
@@ -61,7 +61,7 @@ pipeline {
         stage('Register Image') {
             steps {
                 script {
-                    if ( env.STATUS_CODE != "000" || env.JENKINS_PASS != "" ) {
+                    if ( env.STATUS_CODE == "200" || env.STATUS_CODE == "403" || env.JENKINS_PASS != "" ) {
                         echo "Jenkins-docker is alive and kicking!"
                         /*withDockerRegistry(credentialsId: "${env.REGISTRY_CREDENTIAL}", url: "") {
                             echo "Push image ${env.IMAGE_NAME} to DockerHub registry"
@@ -69,7 +69,7 @@ pipeline {
                             sh "docker logout"
                         }*/
                         docker.withRegistry(url: env.REGISTRY_URL, credentialsId: env.REGISTRY_CREDENTIAL) {
-                            myImage.push()
+                            customImage.push()
                             echo "Image ${env.IMAGE_NAME} pushed to Docker registry"
                         }
                         currentBuild.result = "SUCCESS"
@@ -84,7 +84,7 @@ pipeline {
         /*stage('Cleanup Image') {
             steps {
                 script {
-                    cleanupBuildImage()
+                    cleanupCustomImage()
                 }
             }
         }*/
@@ -92,7 +92,7 @@ pipeline {
     post {
         always {
             script {
-                cleanupBuildImage()
+                cleanupCustomImage()
                 sendEmailNotification()
             }
             cleanWs()
@@ -103,7 +103,10 @@ pipeline {
 
 def testCustomImage(image) {
     def status_code
-    image.inside {
+    //image.inside {
+    def container = image.run('-p 49001:8080 --name=jenkins-docker-test')
+    def conport = container.port('49001')
+    script {
         // Give container a time for kicking up Jenkins
         sleep(time: 30, unit: 'SECONDS')
 
@@ -111,8 +114,12 @@ def testCustomImage(image) {
         status_code = sh(returnStdout: true,
             script: '''
                 set +x
-                curl -s -w "%{http_code}" -o /dev/null http://localhost:8080
+                curl -s -w "%{http_code}" -o /dev/null http://${conport}
                 '''
+        ).trim()
+
+        env.JENKINS_PASS = sh(returnStdout: true,
+            script: "docker exec -i jenkins-docker-test cat /var/jenkins_home/secrets/initialAdminPassword"
         ).trim()
     }
     //echo "Get status code ${status_code} from container jenkins-docker-test"
@@ -149,12 +156,12 @@ def testBuildImage() {
     */
 }
 
-def cleanupBuildImage() {
+def cleanupCustomImage() {
     // Just wait for a while
     sleep(time: 10, unit: 'SECONDS')
 
-    sh 'docker ps -qf "name=jenkins-docker-test" | xargs -r docker container stop'
-    sh 'docker container ls -aqf "name=jenkins-docker-test" | xargs -r docker container rm'
+    sh 'docker container ps -qf "name=jenkins-docker-test" | xargs -r docker container stop'
+    sh 'docker container ls -aqf "name=jenkins-docker-test" | xargs -r docker container rm -f'
     sh 'docker images -q ${env.IMAGE_NAME} | xargs -r docker rmi'
     sh 'docker system prune --force'
 }
@@ -196,7 +203,7 @@ def sendEmailNotification() {
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
         recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
         //body: '${SCRIPT, template="groovy-html.template"}'
-        body: '${FILE, path="jk-email.html"}'
+        body: '${SCRIPT, template="jk-email.html"}'
 
     // Just wait for email sent
     sleep(time: 10, unit: 'SECONDS')
