@@ -60,16 +60,18 @@ pipeline {
 
         stage('Test Image') {
             steps {
-                app.inside {
-                    sleep(time: 60, unit: 'SECONDS')
+                script {
+                    app.inside {
+                        sleep(time: 60, unit: 'SECONDS')
 
-                    def statusCode = sh(returnStdout: true,
-                        script: "curl -s -w \"%{http_code}\" -o /dev/null http://localhost:8080"
-                    ).trim()
-                    def jenkinsAdminPass = sh(
-                            returnStdout: true, 
-                            script: "cat /var/jenkins_home/secrets/initialAdminPassword"
-                    ).trim()
+                        def statusCode = sh(returnStdout: true,
+                            script: "curl -s -w \"%{http_code}\" -o /dev/null http://localhost:8080"
+                        ).trim()
+                        def jenkinsAdminPass = sh(
+                                returnStdout: true, 
+                                script: "cat /var/jenkins_home/secrets/initialAdminPassword"
+                        ).trim()
+                    }
                 }
                 echo "Get status code ${statusCode} from custom image container"
                 /*
