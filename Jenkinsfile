@@ -165,8 +165,28 @@ def sendEmailNotification() {
                 echo ${env.GIT_COMMITTER_EMAIL} | md5sum | cut -d' ' -f1
                 """
         ).trim()
+
+        /*
         def buildStatus = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? 'passed' : (currentBuild.currentResult == 'FAILURE') ? 'failed' : 'warning')
         def cssBgColor = ((currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') ? '#db4545' : (currentBuild.currentResult == 'FAILURE') ? '#32d282' : '#c6d433')
+        */
+
+        if (currentBuild.currentResult == '' || currentBuild.currentResult == 'SUCCESS') {
+            // success
+            def buildStatus = 'passed'
+            def cssColorStatus = '#32d282'
+            def cssColorRgba = '50,210,130,0.1'
+        } else if (currentBuild.currentResult == 'FAILURE') {
+            // failure
+            def buildStatus = 'failed'
+            def cssColorStatus = '#db4545'
+            def cssColorRgba = '219,69,69,0.1'
+        } else {
+            // unknown
+            def buildStatus = 'warn'
+            def cssColorStatus = '#c6d433'
+            def cssColorRgba = '198,212,51,0.1'
+        }
         
         sh "cp -f ${emailTemplatePath} ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{registryOrg}|${env.REGISTRY_ORG}|g' ${emailTemplateDir}/jk-email.html"
@@ -184,7 +204,8 @@ def sendEmailNotification() {
         sh "sed -i 's|{buildNumber}|${env.BUILD_NUMBER}|g' ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{buildDuration}|${currentBuild.durationString}|g' ${emailTemplateDir}/jk-email.html"
         sh "sed -i 's|{buildStatus}|${buildStatus}|g' ${emailTemplateDir}/jk-email.html"
-        sh "sed -i 's|{cssBgColor}|${cssBgColor}|g' ${emailTemplateDir}/jk-email.html"
+        sh "sed -i 's|{cssColorStatus}|${cssColorStatus}|g' ${emailTemplateDir}/jk-email.html"
+        sh "sed -i 's|{cssColorRgba}|${cssColorRgba}|g' ${emailTemplateDir}/jk-email.html"
 
         emailext mimeType: 'text/html',
             subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
@@ -194,6 +215,6 @@ def sendEmailNotification() {
 
         // Just wait for email sent
         sleep(time: 10, unit: 'SECONDS')
-        //sh "rm -f ${emailTemplateDir}/jk-email.html"
+        sh "rm -f ${emailTemplateDir}/jk-email.html"
     }
 }
