@@ -82,10 +82,10 @@ pipeline {
                 }
                 echo "Get status code ${env.STATUS_CODE} from custom image container"
                 */
-            }
 
-            env.STATUS_CODE = "${statusCode}"
-            env.JENKINS_PASS = "${jenkinsAdminPass}"
+                env.STATUS_CODE = "${statusCode}"
+                env.JENKINS_PASS = "${jenkinsAdminPass}"
+            }
         }
 
         stage('Register Image') {
