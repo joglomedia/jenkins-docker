@@ -5,7 +5,7 @@
  *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
 
-node {
+pipelines {
     agent any
 
     environment {
@@ -14,8 +14,6 @@ node {
         REGISTRY_URL = "https://registry.hub.docker.com" // https://index.docker.io/v1/
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
-
-    def app
 
     stages {
         stage('Init') {
@@ -46,6 +44,7 @@ node {
 
         stage('Build Image') {
             steps {
+                def app
                 //script {
                     app = docker.build("${env.IMAGE_NAME}")
 
