@@ -72,6 +72,9 @@ pipeline {
                                 script: "cat /var/jenkins_home/secrets/initialAdminPassword"
                         ).trim()
                     }
+
+                    env.STATUS_CODE = "${statusCode}"
+                    env.JENKINS_PASS = "${jenkinsAdminPass}"
                 }
                 echo "Get status code ${statusCode} from custom image container"
                 /*
@@ -82,9 +85,6 @@ pipeline {
                 }
                 echo "Get status code ${env.STATUS_CODE} from custom image container"
                 */
-
-                env.STATUS_CODE = "${statusCode}"
-                env.JENKINS_PASS = "${jenkinsAdminPass}"
             }
         }
 
