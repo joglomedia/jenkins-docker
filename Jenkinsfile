@@ -121,7 +121,7 @@ def runCustomImage(imageName, args) {
     env.STATUS_CODE = sh(returnStdout: true,
         script: '''
             set +x
-            curl -s -w "%{http_code}" -o /dev/null http://localhost:${containerPort}
+            curl -s -w "%{http_code}" -o /dev/null "http://localhost:${containerPort}"
             '''
     ).trim()
 
