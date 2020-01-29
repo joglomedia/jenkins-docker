@@ -112,7 +112,7 @@ def runCustomImage(imageName, args) {
     def containerPort = sh(returnStdout: true,
         script: """
             docker inspect jenkins-docker-test | grep -wE '\"HostPort\": \"[0-9]\\d{0,5}\"' | \
-            head -n 1 | sed -e 's/^[[:space:]]*//' | cut -d' ' -f2 | sed -e 's/^\"//' -e 's/\"$//'
+            head -n 1 | sed -e 's/^[[:space:]]*//' | cut -d' ' -f2 | sed -e 's/^\"//' -e 's/\"\$//'
             """
     ).trim()
 
