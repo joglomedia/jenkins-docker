@@ -31,11 +31,12 @@ git-server:1.9
 github:1.29.5
 github-api:1.106
 jdk-tool:1.4
+jira:3.0.11
 junit:1.28
 locale:1.4
 mailer:1.30
 matrix-project:1.14
-plain-credentials:1.5
+plain-credentials:1.6
 scm-api:2.6.3
 script-security:1.68
 ssh-credentials:1.18.1
