@@ -5,6 +5,8 @@
  *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
 
+def app
+
 pipeline {
     agent any
 
@@ -44,8 +46,7 @@ pipeline {
 
         stage('Build Image') {
             steps {
-                def app
-                //script {
+                script {
                     app = docker.build("${env.IMAGE_NAME}")
 
                     if ( app.id != "" ) {
@@ -53,7 +54,7 @@ pipeline {
                     } else {
                         echo "Failed building Docker image ${env.IMAGE_NAME}"
                     }
-                //}
+                }
             }
         }
 
