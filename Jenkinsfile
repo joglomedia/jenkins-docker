@@ -4,6 +4,7 @@
  *  https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry
  *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
+def myImage
 pipeline {
     agent any
     environment {
@@ -13,7 +14,6 @@ pipeline {
         REGISTRY_CREDENTIAL = "dockerhub-cred"
     }
     stages {
-        def myImage
         stage('Init') {
             steps {
                 script {
