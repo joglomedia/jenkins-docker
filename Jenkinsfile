@@ -33,7 +33,7 @@ pipeline {
                         script: "git log --oneline --format=\"%an\" ${env.GIT_COMMIT} | head -1",
                     ).trim()
 
-                    env.IMAGE_NAME = "${env.REGISTRY_ORG}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.GIT_COMMIT_HASH)
+                    env.IMAGE_NAME = "${env.REGISTRY_ORG}/${env.REGISTRY_REPO}:" + ((env.BRANCH_NAME == "master") ? "latest" : env.BRANCH_NAME)
                 }
                 echo "Commit ${env.GIT_COMMIT_HASH} checked out from ${env.BRANCH_NAME} branch"
             }
@@ -119,10 +119,10 @@ def runCustomImage(imageName, args) {
 
     // Get Jenkins status code
     env.STATUS_CODE = sh(returnStdout: true,
-        script: '''
+        script: """
             set +x
-            curl -s -w "%{http_code}" -o /dev/null "http://localhost:${containerPort}"
-            '''
+            curl -s -w \"%{http_code}\" -o /dev/null http://localhost:${containerPort}
+            """
     ).trim()
 
     echo "Get status code ${env.STATUS_CODE} from Jenkins http://localhost:${containerPort}"
