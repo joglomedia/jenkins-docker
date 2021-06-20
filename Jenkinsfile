@@ -1,8 +1,8 @@
 /**
  * Jenkins Pipeline
- * Ref:
- *  https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry
- *  https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
+ * References:
+ *   - https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry
+ *   - https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
  */
 
 def app
@@ -75,7 +75,7 @@ pipeline {
                     //env.STATUS_CODE = "${statusCode}"
                     env.JENKINS_PASS = "${jenkinsAdminPass}"
                 }
-                echo "Get status code ${statusCode} from custom image container"
+                echo "Get admin pass ${env.JENKINS_PASS} from custom image container"
                 /*
                 script {
                     def contArgs = "--name=jenkins-docker-test -p 49001:8080"
