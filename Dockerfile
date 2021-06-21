@@ -1,4 +1,4 @@
-# Use Jenkins latest
+# Use Jenkins latest.
 FROM jenkins/jenkins:lts-alpine
 
 LABEL maintainer Edi Septriyanto <me@masedi.net> architecture="AMD64/x86_64"
@@ -8,18 +8,23 @@ USER root
 
 ENV JENKINS_REF /usr/share/jenkins/ref
 
-# Install Docker
+# Install Docker.
 RUN echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories && \
     apk add --no-cache docker shadow
 
-# Skip the setup wizard
-# ENV JAVA_ARGS -Djenkins.install.runSetupWizard=false -Dpermissive-script-security.enabled=true
-# ENV JAVA_ARGS -Djenkins.install.runSetupWizard=false
-ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false -Dpermissive-script-security.enabled=true"
+# Skip the setup wizard.
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
+    -Dpermissive-script-security.enabled=true"
 
-# Install the plugins
-COPY jenkins-home/plugins.txt ${JENKINS_REF}/
-RUN /usr/local/bin/install-plugins.sh < ${JENKINS_REF}/plugins.txt
+# Set default admin user.
+ENV JENKINS_OPTS="--argumentsRealm.roles.user=admin \
+    --argumentsRealm.passwd.admin=admin \
+    --argumentsRealm.roles.admin=admin"
+
+# Install the plugins.
+COPY --chown=jenkins:jenkins jenkins-home/plugins.txt ${JENKINS_REF}/
+#RUN /usr/local/bin/install-plugins.sh < ${JENKINS_REF}/plugins.txt
+RUN jenkins-plugin-cli -f ${JENKINS_REF}/plugins.txt
 
 COPY jenkins-home/email-templates /var/jenkins_home/
 
