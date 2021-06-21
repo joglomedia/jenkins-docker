@@ -47,7 +47,7 @@ docker exec -it jenkins-docker cat /var/jenkins_home/secrets/initialAdminPasswor
 
 ## Install additional plugins
 
-All additional plugins listed in [jenkins-home/plugins.txt](https://github.com/joglomedia/jenkins-docker/blob/master/jenkins-home/plugins.txt) file.
+All additional plugins listed in [jenkins-home/plugins.txt](https://github.com/joglomedia/jenkins-docker/blob/lts-alpine/jenkins-home/plugins.txt) file.
 
 ## Inspirations
 
@@ -55,7 +55,7 @@ All additional plugins listed in [jenkins-home/plugins.txt](https://github.com/j
 
 ## DONATION
 
-**[Buy Me a Bottle of Milk or a Cup of Coffee](https://paypal.me/masedi) !!**
+**[Buy Me a Bottle of Milk or a Cup of Coffee!](https://paypal.me/masedi)**
 
 ## SPONSORSHIP
 
