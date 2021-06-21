@@ -1,8 +1,8 @@
-# Use Jenkins latest
-FROM jenkins/jenkins:latest
+# Use Jenkins LTS
+FROM jenkins/jenkins:lts
 
 LABEL maintainer Edi Septriyanto <eslabs.id@gmail.com> architecture="AMD64/x86_64"
-LABEL jenkins-version="latest" debian-version="stretch" build="25-Jan-2020"
+LABEL jenkins-version="lts" debian-version="stretch" build="21-Jun-2021"
 
 USER root
 
@@ -21,14 +21,19 @@ RUN apt-get -y update && \
     apt-get -y update && \
     apt-get -y install docker-ce
 
-# Skip the setup wizard
-# ENV JAVA_ARGS -Djenkins.install.runSetupWizard=false -Dpermissive-script-security.enabled=true
-# ENV JAVA_ARGS -Djenkins.install.runSetupWizard=false
-ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false -Dpermissive-script-security.enabled=true"
+# Skip the setup wizard.
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
+    -Dpermissive-script-security.enabled=true"
+
+# Set default admin user.
+ENV JENKINS_OPTS="--argumentsRealm.roles.user=admin \
+    --argumentsRealm.passwd.admin=admin \
+    --argumentsRealm.roles.admin=admin"
 
 # Install the plugins
 COPY jenkins-home/plugins.txt ${JENKINS_REF}/
-RUN /usr/local/bin/install-plugins.sh < ${JENKINS_REF}/plugins.txt
+#RUN /usr/local/bin/install-plugins.sh < ${JENKINS_REF}/plugins.txt
+RUN jenkins-plugin-cli -f ${JENKINS_REF}/plugins.txt
 
 COPY jenkins-home/email-templates /var/jenkins_home/
 
