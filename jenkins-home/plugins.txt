@@ -23,6 +23,7 @@ credentials:latest
 display-url-api:latest
 docker-build-publish:latest
 docker-commons:latest
+docker-plugin:latest
 docker-workflow:latest
 dockerhub-notification:latest
 email-ext:latest
