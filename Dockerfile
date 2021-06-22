@@ -37,5 +37,5 @@ RUN jenkins-plugin-cli -f ${JENKINS_REF}/plugins.txt
 
 COPY jenkins-home/email-templates /var/jenkins_home/
 
-RUN usermod -a -G docker jenkins
+RUN usermod -aG docker jenkins
 USER jenkins
