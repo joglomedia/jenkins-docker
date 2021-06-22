@@ -1,4 +1,4 @@
-# Use Jenkins latest.
+# Use Jenkins LTS image.
 FROM jenkins/jenkins:lts-alpine
 
 LABEL maintainer Edi Septriyanto <me@masedi.net> architecture="AMD64/x86_64"
@@ -9,8 +9,9 @@ USER root
 ENV JENKINS_REF /usr/share/jenkins/ref
 
 # Install Docker.
-RUN echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories && \
-    apk add --no-cache docker shadow
+RUN set -ex && \
+    echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories && \
+    apk add --no-cache docker shadow sudo
 
 # Skip the setup wizard.
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
@@ -28,5 +29,5 @@ RUN jenkins-plugin-cli -f ${JENKINS_REF}/plugins.txt
 
 COPY jenkins-home/email-templates /var/jenkins_home/
 
-RUN usermod -a -G docker jenkins
+RUN usermod -aG docker jenkins
 USER jenkins
