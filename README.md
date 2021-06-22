@@ -7,7 +7,7 @@ Build a Docker image using Jenkins pipeline and push it into Docker registry. Th
 Start your jenkins-docker container by running this command:
 
 ```bash
-docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock joglomedia/jenkins-docker:lts
+docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock:rw joglomedia/jenkins-docker:lts
 ```
 
 You also can configure a volume for Jenkins home. Use a directory for which you have permission.
@@ -26,7 +26,7 @@ chown 1000:1000 ${JENKINS_HOME}
 Initialize jenkins-docker container as below:
 
 ```bash
-docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v ${JENKINS_HOME}:/var/jenkins_home joglomedia/jenkins-docker:lts
+docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock:rw -v ${JENKINS_HOME}:/var/jenkins_home joglomedia/jenkins-docker:lts
 ```
 
 For running container in the background add a ```-d``` or ```--detach``` parameter to the Docker's ```container run``` command above.
