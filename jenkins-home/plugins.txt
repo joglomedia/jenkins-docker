@@ -20,6 +20,7 @@ blueocean-web:latest
 bouncycastle-api:latest
 command-launcher:latest
 credentials:latest
+credentials-binding:latest
 display-url-api:latest
 docker-build-publish:latest
 docker-commons:latest
@@ -32,6 +33,7 @@ git-client:latest
 git-server:latest
 github:latest
 github-api:latest
+github-branch-source:latest
 jdk-tool:latest
 jira:latest
 junit:latest
