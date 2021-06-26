@@ -2,24 +2,11 @@
 FROM jenkins/jenkins:lts
 
 LABEL maintainer Edi Septriyanto <eslabs.id@gmail.com> architecture="AMD64/x86_64"
-LABEL jenkins-version="lts" debian-version="stretch" build="21-Jun-2021"
+LABEL jenkins-version="lts" build="21-Jun-2021"
 
 USER root
 
 ENV JENKINS_REF /usr/share/jenkins/ref
-
-# Install Docker
-RUN apt-get -y update && \
-    apt-get -y install apt-transport-https \
-        ca-certificates \
-        curl \
-        gnupg2 \
-        software-properties-common && \
-    curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "${ID}")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
-    add-apt-repository \
-        "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable" && \
-    apt-get -y update && \
-    apt-get -y install docker-ce
 
 # Skip the setup wizard.
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
@@ -37,5 +24,18 @@ RUN jenkins-plugin-cli -f ${JENKINS_REF}/plugins.txt
 
 COPY jenkins-home/email-templates /var/jenkins_home/
 
-RUN usermod -aG docker jenkins
+# Install Docker
+RUN apt-get -y update && \
+    apt-get -y install apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg2 \
+        software-properties-common && \
+    curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "${ID}")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
+    add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable" && \
+    apt-get -y update && \
+    apt-get -y install docker-ce && \
+    usermod -aG docker jenkins
+
 USER jenkins
