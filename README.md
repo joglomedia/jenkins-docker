@@ -1,6 +1,6 @@
 # jenkins-docker
 
-Build a Docker image using Jenkins pipeline and push it into Docker registry. This `jenkins-docker` image is built from jenkins official image, install Docker and give access to user ```jenkins``` build dockers.
+Build a Docker image using Jenkins pipeline and push it into Docker registry. This `jenkins-docker` image is built from Jenkins official image, install Docker, and give access to user ```jenkins``` build images.
 
 Get the image from Docker Hub: [https://hub.docker.com/r/joglomedia/jenkins-docker](https://hub.docker.com/r/joglomedia/jenkins-docker)
 
