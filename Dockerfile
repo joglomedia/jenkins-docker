@@ -1,17 +1,33 @@
-# Use Jenkins LTS image.
+# Use Jenkins LTS
 FROM jenkins/jenkins:lts-alpine
 
 LABEL maintainer Edi Septriyanto <me@masedi.net> architecture="AMD64/x86_64"
-LABEL jenkins-version="lts-alpine" build="21-Jun-2021"
+LABEL jenkins-version="lts-alpine" build="12-Aug-2021"
 
 USER root
 
-ENV JENKINS_REF /usr/share/jenkins/ref
-
-# Install Docker.
+# Install docker and dependencies.
 RUN set -ex && \
-    echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories && \
-    apk add --no-cache docker shadow sudo
+    apk update && apk upgrade && \
+    apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/main/ \
+    ca-certificates openssl sudo bash && \
+#    update-ca-certificates && \
+    apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/community/ \
+    docker docker-compose shadow && \
+    rm -rf /var/lib/apk/*
+
+# Add jenkins as docker group and sudoers
+RUN usermod -a -G docker jenkins && \
+    echo "jenkins ALL=NOPASSWD: ALL" >> /etc/sudoers
+
+USER jenkins
+
+# Install Jenkins plugins.
+COPY --chown=jenkins:jenkins jenkins-home/plugins.txt /usr/share/jenkins/ref/plugins.txt
+RUN jenkins-plugin-cli --verbose -f /usr/share/jenkins/ref/plugins.txt
+
+# Copy email notification template.
+COPY --chown=jenkins:jenkins jenkins-home/email-templates /var/jenkins_home/
 
 # Skip the setup wizard.
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
@@ -21,13 +37,3 @@ ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
 ENV JENKINS_OPTS="--argumentsRealm.roles.user=admin \
     --argumentsRealm.passwd.admin=admin \
     --argumentsRealm.roles.admin=admin"
-
-# Install the plugins.
-COPY --chown=jenkins:jenkins jenkins-home/plugins.txt ${JENKINS_REF}/
-#RUN /usr/local/bin/install-plugins.sh < ${JENKINS_REF}/plugins.txt
-RUN jenkins-plugin-cli -f ${JENKINS_REF}/plugins.txt
-
-COPY jenkins-home/email-templates /var/jenkins_home/
-
-RUN usermod -aG docker jenkins
-USER jenkins
