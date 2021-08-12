@@ -1,8 +1,10 @@
 # jenkins-docker
 
-Build a Docker image using Jenkins pipeline and push it into Docker registry. This Dockerfile is built from jenkins official image, install Docker and give access to user ```jenkins``` build dockers.
+Build a Docker image using Jenkins pipeline and push it into Docker registry. This `jenkins-docker` image is built from jenkins official image, install Docker and give access to user ```jenkins``` build dockers.
 
-## Running Jenkins with Docker from host
+Get the image from Docker Hub: [https://hub.docker.com/r/joglomedia/jenkins-docker](https://hub.docker.com/r/joglomedia/jenkins-docker)
+
+## Running Jenkins with Docker from Host
 
 Start your jenkins-docker container by running this command:
 
@@ -31,7 +33,7 @@ docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:
 
 For running container in the background add a ```-d``` or ```--detach``` parameter to the Docker's ```container run``` command above.
 
-## Complete Jenkins startup wizard
+## Complete Jenkins Startup Wizard
 
 After initializing the Jenkins container, complete the Jenkins startup wizard and install additional plugins (Locale & Blueocean). Your Jenkins web administration should be accessible from here:
 
@@ -45,13 +47,9 @@ If you're asked for administrator password, you can get the password from inside
 docker exec -it jenkins-docker cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
-## Install additional plugins
+## Install Additional Jenkins Plugins
 
 All additional plugins listed in [jenkins-home/plugins.txt](https://github.com/joglomedia/jenkins-docker/blob/lts-alpine/jenkins-home/plugins.txt) file.
-
-## Inspirations
-
-[Jenkins and Docker](https://www.edureka.co/community/55640/jenkins-docker-docker-image-jenkins-pipeline-docker-registry)
 
 ## DONATION
 
