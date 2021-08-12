@@ -1,0 +1,33 @@
+/**
+ * Jenkins Pipeline Example
+ *
+ * This is just an example pipeline, not really work.
+ * Adjust to meet your requirements!
+ */
+
+pipeline {
+    agent any
+    environment {
+        ENV_NAME = 'some value'
+        SOME_CREDENTIALS = credentials('credentials_id')
+    }
+    stages {
+        stage("build") {
+            steps {
+                echo 'Building the application...'
+            }
+        }
+
+        stage("test") {
+            steps {
+                echo 'Testing the application...'
+            }
+        }
+
+        stage("deploy") {
+            steps {
+                echo 'Deploying the application...'
+            }
+        }
+    }
+}
