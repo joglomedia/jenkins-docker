@@ -1,3 +1,5 @@
+#!/usr/bin/env groovy
+
 /**
  * Jenkins Pipeline
  * References:
@@ -11,7 +13,7 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY_ORG = "eslabsid"
+        REGISTRY_ORG = "joglomedia"
         REGISTRY_REPO = "jenkins-docker"
         REGISTRY_URL = "https://registry.hub.docker.com" // https://index.docker.io/v1/
         REGISTRY_CREDENTIAL = "dockerhub-cred"
@@ -43,7 +45,7 @@ pipeline {
             }
         }
 
-        stage('Build Image') {
+        stage('Build') {
             steps {
                 script {
                     app = docker.build("${env.IMAGE_NAME}")
@@ -57,7 +59,7 @@ pipeline {
             }
         }
 
-        stage('Test Image') {
+        stage('Test') {
             steps {
                 script {
                     app.inside {
@@ -75,7 +77,9 @@ pipeline {
                     //env.STATUS_CODE = "${statusCode}"
                     env.JENKINS_PASS = "${jenkinsAdminPass}"
                 }
+
                 echo "Get admin pass ${env.JENKINS_PASS} from custom image container"
+
                 /*
                 script {
                     def contArgs = "--name=jenkins-docker-test -p 49001:8080"
@@ -87,7 +91,7 @@ pipeline {
             }
         }
 
-        stage('Register Image') {
+        stage('Publish') {
             steps {
                 script {
                     if ( env.STATUS_CODE == "200" || env.STATUS_CODE == "403" || env.JENKINS_PASS != "" ) {
@@ -109,7 +113,7 @@ pipeline {
             }
         }
 
-        /*stage('Cleanup Image') {
+        /*stage('Cleanup') {
             steps {
                 script {
                     cleanupCustomImage()
@@ -128,7 +132,6 @@ pipeline {
         }
     }
 }
-
 
 def runCustomImage(imageName, args) {
     if ( args.isEmpty() ) {
