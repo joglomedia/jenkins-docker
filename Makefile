@@ -1,7 +1,7 @@
 NAME=jenkins-docker
 VERSION=0.0.1
 REPO=joglomedia/jenkins-docker
-TAG=lts-alpine
+TAG=lts
 
 build:
 	docker build --rm --pull -t $(REPO):$(TAG) .
