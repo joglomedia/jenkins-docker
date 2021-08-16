@@ -52,7 +52,11 @@ chown 1000:1000 ${JENKINS_HOME}
 Finally, initialize jenkins-docker container as below:
 
 ```bash
-docker container run -d --name jenkins-docker -p 8080:8080 -e DOCKER_HOST_GID=${DOCKER_HOST_GID} -v /var/run/docker.sock:/var/run/docker.sock:ro -v ${JENKINS_HOME}:/var/jenkins_home joglomedia/jenkins-docker:lts
+docker container run -d --name jenkins-docker -p 8080:8080 \
+-e DOCKER_HOST_GID=${DOCKER_HOST_GID} \
+-v /var/run/docker.sock:/var/run/docker.sock:ro \
+-v ${JENKINS_HOME}:/var/jenkins_home \
+joglomedia/jenkins-docker:lts
 ```
 
 For running container in the background add a ```-d``` or ```--detach``` parameter to the Docker's ```container run``` command above.
