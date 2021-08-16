@@ -1,6 +1,6 @@
 # jenkins-docker
 
-Build a Docker image using Jenkins pipeline and push it into Docker registry. This `jenkins-docker` image is built from Jenkins official image, install Docker, and give access to user ```jenkins``` build images.
+Build a Docker image using Jenkins pipeline and push it into Docker registry. This ```jenkins-docker``` image is built from Jenkins official image, install Docker, and give access to user ```jenkins``` build images.
 
 Get the image from Docker Hub: [https://hub.docker.com/r/joglomedia/jenkins-docker](https://hub.docker.com/r/joglomedia/jenkins-docker)
 
@@ -9,7 +9,31 @@ Get the image from Docker Hub: [https://hub.docker.com/r/joglomedia/jenkins-dock
 Start your jenkins-docker container by running this command:
 
 ```bash
-docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock:rw joglomedia/jenkins-docker:lts-alpine
+docker container run --name jenkins-docker -p 8080:8080 joglomedia/jenkins-docker:lts-alpine
+```
+
+To run Jenkins build from host, you need to mount the Docker socket to the container. Add the volume parameter to your ```docker run``` command:
+
+```bash
+-v /var/run/docker.sock:/var/run/docker.sock:rw
+```
+
+In order to make the Docker inside your container able to communicate with the host Docker daemon, you should set the Docker group ID similar to the group ID of your host Docker daemon.
+
+```bash
+-e DOCKER_HOST_GID=YOUR_DOCKER_HOST_GID
+```
+
+You can try the following command to get the host Docker group ID:
+
+```bash
+getent group docker | cut -d: -f3
+```
+
+Assign the group ID to the ```DOCKER_HOST_GID``` environment variable, so you can pass it to the ```docker container run``` command.
+
+```bash
+DOCKER_HOST_GID=$(getent group docker | cut -d: -f3)
 ```
 
 You also can configure a volume for Jenkins home. Use a directory for which you have permission.
@@ -25,10 +49,10 @@ Change ownership required for Linux, ignore this line for Mac or Windows.
 chown 1000:1000 ${JENKINS_HOME}
 ```
 
-Initialize jenkins-docker container as below:
+Finally, initialize jenkins-docker container as below:
 
 ```bash
-docker container run --name jenkins-docker -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock:rw -v ${JENKINS_HOME}:/var/jenkins_home joglomedia/jenkins-docker:lts-alpine
+docker container run -d --name jenkins-docker -p 8080:8080 -e DOCKER_HOST_GID=${DOCKER_HOST_GID} -v /var/run/docker.sock:/var/run/docker.sock:ro -v ${JENKINS_HOME}:/var/jenkins_home joglomedia/jenkins-docker:lts-alpine
 ```
 
 For running container in the background add a ```-d``` or ```--detach``` parameter to the Docker's ```container run``` command above.
