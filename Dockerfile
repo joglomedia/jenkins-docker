@@ -2,9 +2,15 @@
 FROM jenkins/jenkins:lts
 
 LABEL maintainer Edi Septriyanto <me@masedi.net> architecture="AMD64/x86_64"
-LABEL jenkins-version="lts" build="12-Aug-2021"
+LABEL jenkins-version="lts" build="16-Aug-2021"
 
 USER root
+
+ARG DOCKER_HOST_GID=${DOCKER_HOST_GID:-9999}
+ENV DOCKER_HOST_GID=${DOCKER_HOST_GID}
+
+# Modified entrypoint to allow for the use of a custom docker host.
+COPY src/jenkins-docker.sh /usr/local/bin/jenkins-docker.sh
 
 # Install Docker and dependencies.
 RUN set -ex && \
@@ -19,10 +25,10 @@ RUN set -ex && \
         "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable" && \
     apt-get -y update && \
     apt-get -y install docker-ce && \
-    rm -rf /var/lib/apt/lists/*
-
+    rm -rf /var/lib/apt/lists/* && \
 # Add jenkins as docker group and sudoers
-RUN usermod -a -G docker jenkins && \
+    groupmod -g ${DOCKER_HOST_GID} docker && \
+    usermod -aG docker jenkins && \
     echo "jenkins ALL=NOPASSWD: ALL" >> /etc/sudoers
 
 USER jenkins
@@ -31,10 +37,10 @@ USER jenkins
 COPY --chown=jenkins:jenkins jenkins-home/plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --verbose -f /usr/share/jenkins/ref/plugins.txt
 
-# Copy email notification template.
+# Copy sample email notification template.
 COPY --chown=jenkins:jenkins jenkins-home/email-templates /var/jenkins_home/
 
-# Skip the setup wizard.
+# Run the setup wizard.
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
     -Dpermissive-script-security.enabled=true"
 
@@ -42,3 +48,5 @@ ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
 ENV JENKINS_OPTS="--argumentsRealm.roles.user=admin \
     --argumentsRealm.passwd.admin=admin \
     --argumentsRealm.roles.admin=admin"
+
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/jenkins-docker.sh"]
