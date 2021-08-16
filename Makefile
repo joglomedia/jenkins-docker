@@ -3,7 +3,7 @@ VERSION=0.0.2
 REPO=joglomedia/jenkins-docker
 TAG := $(shell git rev-parse --abbrev-ref HEAD)
 JENKINS_HOME := $(shell echo "$$(pwd)/jenkins_home")
-DOCKER_HOST_GID := $(shell cat /etc/group |grep docker | awk '{split($$0,a,":"); print a[3]}')
+DOCKER_HOST_GID := $(shell getent group docker | cut -d: -f3)
 
 build:
 	docker build --rm --pull --build-arg DOCKER_HOST_GID=$(DOCKER_HOST_GID) -t $(REPO):$(TAG) .
@@ -25,6 +25,6 @@ test:
 	fi
 
 all:
-	build push
+	build test push
 
-.PHONY: build push all
+.PHONY: build test push all
