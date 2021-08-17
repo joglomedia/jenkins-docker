@@ -2,7 +2,7 @@
 FROM jenkins/jenkins:lts
 
 LABEL maintainer Edi Septriyanto <me@masedi.net> architecture="AMD64/x86_64"
-LABEL jenkins-version="lts" build="16-Aug-2021"
+LABEL jenkins-version="lts" build="17-Aug-2021"
 
 USER root
 
