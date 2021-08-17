@@ -52,9 +52,9 @@ chown 1000:1000 ${JENKINS_HOME}
 Finally, initialize jenkins-docker container as below:
 
 ```bash
-docker container run -d --name jenkins-docker -p 8080:8080 \
+docker container run --name jenkins-docker -p 8080:8080 \
 -e DOCKER_HOST_GID=${DOCKER_HOST_GID} \
--v /var/run/docker.sock:/var/run/docker.sock:ro \
+-v /var/run/docker.sock:/var/run/docker.sock:rw \
 -v ${JENKINS_HOME}:/var/jenkins_home \
 joglomedia/jenkins-docker:lts-alpine
 ```
@@ -78,6 +78,14 @@ docker exec -it jenkins-docker cat /var/jenkins_home/secrets/initialAdminPasswor
 ## Install Additional Jenkins Plugins
 
 All additional plugins listed in [jenkins-home/plugins.txt](https://github.com/joglomedia/jenkins-docker/blob/lts-alpine/jenkins-home/plugins.txt) file.
+
+## SECURITY PRECAUTION
+
+The ```jenkins-docker``` image build with ```Docker out of Docker``` (DooD) approach for Jenkins CI/CD system. There is one known potential issue surrounding the DooD approach:
+
+> One potential issue of “Docker-out-of-Docker” approach is one can access the outer Docker container from the inner container through “/var/run/docker.sock”. In the context of containerized Jenkins system, the outer Docker container is usually Jenkins master with sensitive information. The inside Docker containers are usually Jenkins slaves that are subject to running all kinds of code which might be malicious. This means that a containerized Jenkins system can be easily compromised if there is no limit on what’s running in Jenkins slaves. ( [Read more](http://tdongsi.github.io/blog/2017/04/23/docker-out-of-docker/) )
+
+**This image intended for personal use only, it is not for publicly available service. Use it at your own risk!**
 
 ## DONATION
 
