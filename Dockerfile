@@ -26,6 +26,7 @@ RUN set -ex && \
     apt-get -y update && \
     apt-get -y install docker-ce && \
     rm -rf /var/lib/apt/lists/* && \
+    chmod +x /usr/local/bin/jenkins-docker.sh && \
 # Add jenkins as docker group and sudoers
     groupmod -g ${DOCKER_HOST_GID} docker && \
     usermod -aG docker jenkins && \
@@ -34,11 +35,11 @@ RUN set -ex && \
 USER jenkins
 
 # Install Jenkins plugins.
-COPY --chown=jenkins:jenkins jenkins-home/plugins.txt /usr/share/jenkins/ref/plugins.txt
+COPY --chown=jenkins:jenkins src/plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --verbose -f /usr/share/jenkins/ref/plugins.txt
 
-# Copy sample email notification template.
-COPY --chown=jenkins:jenkins jenkins-home/email-templates /var/jenkins_home/
+# Copy email notification template.
+COPY --chown=jenkins:jenkins src/email-templates /var/jenkins_home/
 
 # Run the setup wizard.
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
