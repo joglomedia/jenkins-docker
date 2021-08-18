@@ -19,7 +19,7 @@ test:
 	if [ $$(docker images | grep $(REPO) | grep -c $(TAG)) ]; then \
 		mkdir -p $(JENKINS_HOME) && \
 		chown 1000:1000 $(JENKINS_HOME) && \
-		docker run -d --rm --name jenkins-docker-test -p 8080:8080 \
+		docker run --name jenkins-docker-test -p 8080:8080 -p 50000:50000 \
 			-v $(JENKINS_HOME):/var/jenkins_home \
 			-v /var/run/docker.sock:/var/run/docker.sock:ro "$(REPO):$(TAG)"; \
 	fi
