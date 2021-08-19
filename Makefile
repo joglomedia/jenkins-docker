@@ -8,7 +8,7 @@ DOCKER_HOST_GID := $(shell getent group docker | cut -d: -f3)
 build:
 	docker build --rm --pull --build-arg DOCKER_HOST_GID=$(DOCKER_HOST_GID) -t $(REPO):$(TAG) .
 
-run:
+test:
 	if [ $$(docker images | grep $(REPO) | grep -c $(TAG)) ]; then \
 		mkdir -p $(JENKINS_HOME) && \
 		chown 1000:1000 $(JENKINS_HOME) && \
@@ -27,6 +27,6 @@ push:
 	fi
 
 all:
-	build run push
+	build test push
 
-.PHONY: build run push all
+.PHONY: build test push all
