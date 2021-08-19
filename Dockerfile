@@ -2,7 +2,7 @@
 FROM jenkins/jenkins:lts
 
 LABEL maintainer Edi Septriyanto <me@masedi.net> architecture="AMD64/x86_64"
-LABEL jenkins-version="lts" build="17-Aug-2021"
+LABEL jenkins-version="lts" build="18-Aug-2021"
 
 USER root
 
@@ -19,7 +19,8 @@ RUN set -ex && \
         ca-certificates \
         curl \
         gnupg2 \
-        software-properties-common && \
+        software-properties-common \
+        sudo && \
     curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "${ID}")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
     add-apt-repository \
         "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable" && \
