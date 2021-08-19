@@ -49,10 +49,11 @@ Change ownership required for Linux, ignore this line for Mac or Windows.
 chown 1000:1000 ${JENKINS_HOME}
 ```
 
-Finally, initialize jenkins-docker container as below:
+Finally, initialize ```jenkins-docker``` container as below:
 
 ```bash
-docker container run --name jenkins-docker -p 8080:8080 \
+docker container run --name jenkins-docker \
+-p 8080:8080 -p 50000:50000 \
 -e DOCKER_HOST_GID=${DOCKER_HOST_GID} \
 -v /var/run/docker.sock:/var/run/docker.sock:rw \
 -v ${JENKINS_HOME}:/var/jenkins_home \
