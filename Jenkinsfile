@@ -129,10 +129,10 @@ pipeline {
 
 def cleanupCustomImage() {
     // Try to clean up the custom image.
-    sleep(time: 5, unit: 'SECONDS')
-    sh 'docker container ps -qf "name=jenkins-docker-test" | xargs -r docker container stop'
-    sh 'docker container ls -aqf "name=jenkins-docker-test" | xargs -r docker container rm --force'
-    sh 'docker images -q ${env.IMAGE_NAME} | xargs -r docker rmi'
+    sleep(time: 3, unit: 'SECONDS')
+    //sh 'docker container ps -qf "name=jenkins-docker-test" | xargs -r docker container stop'
+    //sh 'docker container ls -aqf "name=jenkins-docker-test" | xargs -r docker container rm --force'
+    sh 'docker images -q ${env.IMAGE_NAME} | xargs -r docker rmi -f'
     sh 'docker system prune --force'
 }
 
@@ -204,6 +204,6 @@ def sendEmailNotification() {
     )
 
     // Just wait for email to sent
-    sleep(time: 5, unit: 'SECONDS')
+    sleep(time: 3, unit: 'SECONDS')
     sh "rm -f ${emailTemplateDir}/jenkins-email.html"
 }
