@@ -16,7 +16,7 @@ pipeline {
         REGISTRY_ORG = "joglomedia"
         REGISTRY_REPO = "jenkins-docker"
         REGISTRY_URL = "https://registry.hub.docker.com" // https://index.docker.io/v1/
-        REGISTRY_CREDENTIAL = "dockerhub-cred"
+        REGISTRY_CREDENTIAL = "dockerhub_cred"
     }
 
     stages {
@@ -69,7 +69,7 @@ pipeline {
                     customImage.inside {
                         // Wait until Jenkins service is fully up.
                         echo "Waiting for Jenkins to start..."
-                        sh "while [[ $(curl -s -w '%{http_code}' http://127.0.0.1:8080/login?from=%2F -o /dev/null) != '200' ]]; do sleep 5; done"
+                        sh "while [[ \$(curl -s -w '%{http_code}' http://127.0.0.1:8080/login?from=%2F -o /dev/null) != '200' ]]; do sleep 5; done"
 
                         echo "Checking Jenkins image is fully up and running."
                         statusCode = sh(
