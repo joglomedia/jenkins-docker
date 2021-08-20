@@ -2,7 +2,7 @@
 FROM jenkins/jenkins:lts
 
 LABEL maintainer Edi Septriyanto <me@masedi.net> architecture="AMD64/x86_64"
-LABEL jenkins-version="lts" build="17-Aug-2021"
+LABEL jenkins-version="lts" build="18-Aug-2021"
 
 USER root
 
@@ -19,13 +19,15 @@ RUN set -ex && \
         ca-certificates \
         curl \
         gnupg2 \
-        software-properties-common && \
+        software-properties-common \
+        sudo && \
     curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "${ID}")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
     add-apt-repository \
         "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable" && \
     apt-get -y update && \
     apt-get -y install docker-ce && \
     rm -rf /var/lib/apt/lists/* && \
+    chmod +x /usr/local/bin/jenkins-docker.sh && \
 # Add jenkins as docker group and sudoers
     groupmod -g ${DOCKER_HOST_GID} docker && \
     usermod -aG docker jenkins && \
@@ -34,11 +36,11 @@ RUN set -ex && \
 USER jenkins
 
 # Install Jenkins plugins.
-COPY --chown=jenkins:jenkins jenkins-home/plugins.txt /usr/share/jenkins/ref/plugins.txt
+COPY --chown=jenkins:jenkins src/plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --verbose -f /usr/share/jenkins/ref/plugins.txt
 
-# Copy sample email notification template.
-COPY --chown=jenkins:jenkins jenkins-home/email-templates /var/jenkins_home/
+# Copy email notification template.
+COPY --chown=jenkins:jenkins src/email-templates /var/jenkins_home/
 
 # Run the setup wizard.
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=true \
