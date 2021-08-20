@@ -68,14 +68,14 @@ pipeline {
 
                     customImage.inside {
                         // Wait until Jenkins service is fully up.
-                        echo "Waiting for Jenkins to start..."
-                        sh "while [[ \$(curl -s -w '%{http_code}' http://127.0.0.1:8080/login?from=%2F -o /dev/null) != '200' ]]; do sleep 5; done"
-
                         echo "Checking Jenkins image is fully up and running."
-                        statusCode = sh(
-                            returnStdout: true,
-                            script: "curl -s -w '%{http_code}' http://127.0.0.1:8080/login?from=%2F -o /dev/null"
-                        ).trim()
+
+                        statusCode = getJenkinsStatusCode()
+                        while (statusCode == "000") {
+                            echo "Waiting for Jenkins to start..."
+                            sleep(time: 5, unit: 'SECONDS')
+                            statusCode = getJenkinsStatusCode()
+                        }
 
                         if ( statusCode == "200" ) {
                             echo "Getting admin pass ${env.JENKINS_PASS} from custom image container."
@@ -127,13 +127,21 @@ pipeline {
     }
 }
 
+def getJenkinsStatusCode() {
+    def statusCode = sh(
+        returnStdout: true,
+        script: "curl -s -w '%{http_code}' http://127.0.0.1:8080/login?from=%2F -o /dev/null"
+    ).trim()
+    return statusCode
+}
+
 def cleanupCustomImage() {
     // Try to clean up the custom image.
     sleep(time: 3, unit: 'SECONDS')
-    //sh 'docker container ps -qf "name=jenkins-docker-test" | xargs -r docker container stop'
-    //sh 'docker container ls -aqf "name=jenkins-docker-test" | xargs -r docker container rm --force'
-    sh 'docker images -q ${env.IMAGE_NAME} | xargs -r docker rmi -f'
-    sh 'docker system prune --force'
+    //sh "docker container stop \$(docker container ps -qf name=jenkins-docker-test)"
+    //sh "docker container rm --force \$(docker container ls -aqf name=jenkins-docker-test)"
+    sh "docker rmi -f \$(docker images -q ${IMAGE_NAME})"
+    sh "docker system prune --force"
 }
 
 def sendEmailNotification() {
