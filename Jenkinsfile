@@ -20,7 +20,7 @@ pipeline {
     }
 
     stages {
-        stage('Init') {
+        stage('Initialize') {
             steps {
                 script {
                     env.GIT_COMMIT_HASH = sh(returnStdout: true,
@@ -45,7 +45,7 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build Image') {
             steps {
                 script {
                     // Build Docker image use Dockerfile on the current branch.
@@ -129,7 +129,7 @@ pipeline {
 
 def cleanupCustomImage() {
     // Try to clean up the custom image.
-    ah 'sleep 3'
+    sleep(time: 5, unit: 'SECONDS')
     sh 'docker container ps -qf "name=jenkins-docker-test" | xargs -r docker container stop'
     sh 'docker container ls -aqf "name=jenkins-docker-test" | xargs -r docker container rm --force'
     sh 'docker images -q ${env.IMAGE_NAME} | xargs -r docker rmi'
@@ -193,11 +193,15 @@ def sendEmailNotification() {
     sh "sed -i 's|{cssColorStatus}|${cssColorStatus}|g' ${emailTemplateDir}/jenkins-email.html"
     sh "sed -i 's|{cssColorRgba}|${cssColorRgba}|g' ${emailTemplateDir}/jenkins-email.html"
 
-    emailext mimeType: 'text/html',
+    emailext (
         subject: "Jenkins build ${currentBuild.currentResult}: ${env.REGISTRY_ORG}/${env.REGISTRY_REPO}#${env.BUILD_NUMBER} (${env.GIT_BRANCH} - ${env.GIT_COMMIT_HASH})",
-        recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
-        //body: '${SCRIPT, template="groovy-html.template"}'
-        body: '${SCRIPT, template="jenkins-email.html"}'
+        body: '${SCRIPT, template="jenkins-email.html"}',
+        attachLog: true,
+        compressLog: true,
+        mimeType: 'text/html',
+        recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'RequesterRecipientProvider']],
+        to: "${env.GIT_COMMITTER_EMAIL}"
+    )
 
     // Just wait for email to sent
     sleep(time: 5, unit: 'SECONDS')
