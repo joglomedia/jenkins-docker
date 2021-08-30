@@ -4,6 +4,9 @@ on:
   push:
     branches: 
       - 'lts'
+  pull_request:
+    branches: 
+      - 'lts'
 
 jobs:
   docker:
