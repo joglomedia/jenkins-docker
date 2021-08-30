@@ -150,11 +150,9 @@ def sendEmailNotification() {
     def rgitUrl = "${env.GIT_URL}"
     def gitUrl = rgitUrl.replace(/.git/, '')
     def gitCommiterEmail = "${env.GIT_COMMITTER_EMAIL}"
-    def gitCommitterAvatar = sh(returnStdout: true,
-        script:
-        """
-        printf \"${env.GIT_COMMITTER_EMAIL}\" | md5sum | cut -d' ' -f1
-        """
+    def gitCommitterAvatar = sh(
+        returnStdout: true,
+        script: "printf '${env.GIT_COMMITTER_EMAIL}' | md5sum | cut -d' ' -f1"
     ).trim()
 
     def buildURL = ((env.RUN_DISPLAY_URL) ? "${env.RUN_DISPLAY_URL}" : "${env.BUILD_URL}")
