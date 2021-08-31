@@ -10,6 +10,7 @@ on:
 
 jobs:
   docker:
+    environment: dockerhub_staging
     runs-on: ubuntu-latest
     steps:
       - 
