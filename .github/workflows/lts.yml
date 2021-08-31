@@ -4,9 +4,13 @@ on:
   push:
     branches: 
       - 'lts'
+  pull_request:
+    branches: 
+      - 'lts'
 
 jobs:
   docker:
+    environment: dockerhub_staging
     runs-on: ubuntu-latest
     steps:
       - 

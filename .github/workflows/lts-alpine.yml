@@ -4,9 +4,13 @@ on:
   push:
     branches: 
       - 'lts-alpine'
+  pull_request:
+    branches: 
+      - 'lts-alpine'
 
 jobs:
   docker:
+    environment: dockerhub_staging
     runs-on: ubuntu-latest
     steps:
       - 
