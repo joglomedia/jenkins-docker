@@ -2,7 +2,7 @@
 FROM jenkins/jenkins:lts-alpine
 
 LABEL maintainer Edi Septriyanto <me@masedi.net> architecture="AMD64/x86_64"
-LABEL jenkins-version="2.332.2-lts-alpine" build="06-Apr-2022"
+LABEL jenkins-version="2.462.2-lts-alpine" build="04-Sep-2024"
 
 USER root
 
