@@ -1,5 +1,5 @@
 NAME=jenkins-docker
-VERSION=0.0.3
+VERSION=0.1.0
 REPO=joglomedia/jenkins-docker
 TAG := $(shell git rev-parse --abbrev-ref HEAD)
 JENKINS_HOME := $(shell echo "$$(pwd)/jenkins_home")
