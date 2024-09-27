@@ -98,4 +98,4 @@ Be the first one!
 
 ## Copyright
 
-(c) 2020-2021 | [MasEDI.Net](https://masedi.net/)
+(c) 2020-2024 | [MasEDI.Net](https://masedi.net/)
